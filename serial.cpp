@@ -27,13 +27,14 @@ Serial::Serial(QObject *parent) : QObject(parent)
 
   connect(serial_port, SIGNAL(readyRead()), this, SLOT(port_read()));
 
-  rx_state       = RX_IDLE_E;
-  rx_length      = 0;
-  rx_addr        = 0;
-  rx_timeout     = 0;
-  rx_crc_low     = 0;
-  rx_crc_high    = 0;
-  rx_crc_enabled = false;
+  rx_state           = RX_IDLE_E;
+  rx_length          = 0;
+  rx_addr            = 0;
+  rx_timeout         = 0;
+  rx_crc_low         = 0;
+  rx_crc_high        = 0;
+  rx_crc_enabled     = false;
+  rx_parse_as_string = false;
 
   rx_timer = new QTimer(this);
   rx_timer->setInterval(10);
@@ -137,9 +138,15 @@ void Serial::port_error(QSerialPort::SerialPortError error)
 }
 
 
-void Serial::rx_set_rx_crc_enabled(bool setting)
+void Serial::rx_set_crc_enabled(bool setting)
 {
   rx_crc_enabled = setting;
+}
+
+
+void Serial::rx_set_parse_as_string(bool setting)
+{
+  rx_parse_as_string = setting;
 }
 
 
@@ -155,77 +162,88 @@ void Serial::rx_parser(QByteArray &data)
 
       case RX_IDLE_E:
 
-        if (rx_data == LENGTH_8_BITS_C) {
-          rx_state   = RX_LENGTH_LOW_E;
-          rx_timeout = RX_TIMEOUT_C;
-          rx_addr    = 0;
-          rx_length  = 0;
+        rx_addr    = 0;
+        rx_length  = 0;
+        rx_timeout = RX_TIMEOUT_C;
+
+        if (rx_parse_as_string) {
+          rx_state = RX_FIND_NEWLINE_E;
+        } else if (rx_data == LENGTH_8_BITS_C) {
+          rx_state = RX_LENGTH_LOW_E;
         } else if (rx_data == LENGTH_16_BITS_C) {
-          rx_state   = RX_LENGTH_HIGH_E;
-          rx_timeout = RX_TIMEOUT_C;
-          rx_addr    = 0;
-          rx_length  = 0;
+          rx_state = RX_LENGTH_HIGH_E;
         }
         break;
 
 
-    case RX_LENGTH_HIGH_E:
+      case RX_FIND_NEWLINE_E:
 
-      rx_length  = (unsigned int)rx_data << 8;
-      rx_state   = RX_LENGTH_LOW_E;
-      rx_timeout = RX_TIMEOUT_C;
-      break;
-
-
-    case RX_LENGTH_LOW_E:
-
-      rx_length |= (unsigned int)rx_data;
-
-      if (rx_length <= RX_BUFFER_SIZE_C && rx_length > 0) {
-        rx_state   = RX_READ_PAYLOAD_E;
-        rx_timeout = RX_TIMEOUT_C;
-      } else {
-        rx_state = RX_LENGTH_LOW_E;
-      }
-      break;
-
-
-    case RX_READ_PAYLOAD_E:
-
-      rx_buffer[rx_addr++] = rx_data;
-      if (rx_addr == RX_TIMEOUT_C) {
-        if (rx_crc_enabled) {
-          rx_state = RX_READ_CRC_LOW_E;
-        } else {
-          emit read_received(data);
+        rx_buffer[rx_addr++] = rx_data;
+        if (rx_data == '\n') {
           rx_state = RX_IDLE_E;
+          emit read_received(data);
         }
-      }
-      rx_timeout = RX_TIMEOUT_C;
-      break;
+        rx_timeout = RX_TIMEOUT_C;
+        break;
 
 
-    case RX_READ_CRC_LOW_E:
+      case RX_LENGTH_HIGH_E:
 
-      rx_state    = RX_READ_CRC_HIGH_E;
-      rx_timeout  = RX_TIMEOUT_C;
-      rx_crc_high = rx_data;
-      break;
-
-
-    case RX_READ_CRC_HIGH_E:
-
-      rx_crc_low = rx_data;
-      rx_timeout = RX_TIMEOUT_C;
-      if (crc_16(rx_buffer, rx_length) == ((unsigned short)rx_crc_high << 8 | (unsigned short)rx_crc_low)) {
-        emit read_received(data);
-      }
-      break;
+        rx_length  = (unsigned int)rx_data << 8;
+        rx_state   = RX_LENGTH_LOW_E;
+        rx_timeout = RX_TIMEOUT_C;
+        break;
 
 
-    default:
-      rx_state = RX_IDLE_E;
-      break;
+      case RX_LENGTH_LOW_E:
+
+        rx_length |= (unsigned int)rx_data;
+
+        if (rx_length <= RX_BUFFER_SIZE_C && rx_length > 0) {
+          rx_state   = RX_READ_PAYLOAD_E;
+          rx_timeout = RX_TIMEOUT_C;
+        } else {
+          rx_state = RX_LENGTH_LOW_E;
+        }
+        break;
+
+
+      case RX_READ_PAYLOAD_E:
+
+        rx_buffer[rx_addr++] = rx_data;
+        if (rx_addr == rx_length) {
+          if (rx_crc_enabled) {
+            rx_state = RX_READ_CRC_LOW_E;
+          } else {
+            emit read_received(data);
+            rx_state = RX_IDLE_E;
+          }
+        }
+        rx_timeout = RX_TIMEOUT_C;
+        break;
+
+
+      case RX_READ_CRC_LOW_E:
+
+        rx_state    = RX_READ_CRC_HIGH_E;
+        rx_timeout  = RX_TIMEOUT_C;
+        rx_crc_high = rx_data;
+        break;
+
+
+      case RX_READ_CRC_HIGH_E:
+
+        rx_crc_low = rx_data;
+        rx_timeout = RX_TIMEOUT_C;
+        if (crc_16(rx_buffer, rx_length) == ((unsigned short)rx_crc_high << 8 | (unsigned short)rx_crc_low)) {
+          emit read_received(data);
+        }
+        break;
+
+
+      default:
+        rx_state = RX_IDLE_E;
+        break;
     }
   }
 }

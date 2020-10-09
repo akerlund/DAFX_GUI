@@ -30,6 +30,7 @@
 
 typedef enum {
   RX_IDLE_E,
+  RX_FIND_NEWLINE_E,
   RX_LENGTH_HIGH_E,
   RX_LENGTH_LOW_E,
   RX_READ_PAYLOAD_E,
@@ -89,7 +90,8 @@ public:
   void port_write(QByteArray &data);
   void port_error(QSerialPort::SerialPortError error);
   void rx_parser(QByteArray &data);
-  void rx_set_rx_crc_enabled(bool setting);
+  void rx_set_crc_enabled(bool setting);
+  void rx_set_parse_as_string(bool setting);
   unsigned short crc_16(const unsigned char *buf, unsigned int len);
 
 
@@ -102,11 +104,12 @@ private:
   rx_state_t    rx_state;
   unsigned char rx_buffer[RX_BUFFER_SIZE_C];
   unsigned int  rx_length;
-  int           rx_addr;
+  unsigned int  rx_addr;
   int           rx_timeout;
   unsigned char rx_crc_low;
   unsigned char rx_crc_high;
   bool          rx_crc_enabled;
+  bool          rx_parse_as_string;
 
 signals:
   void read_received(QByteArray data);

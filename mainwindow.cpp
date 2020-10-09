@@ -83,7 +83,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
 MainWindow::~MainWindow()
 {
-    delete ui;
+  delete ui;
 }
 
 void MainWindow::on_tab0_btn_update_clicked()
