@@ -1,17 +1,53 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright (C) 2020 Fredrik Åkerlund
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+// Description:
+//
+////////////////////////////////////////////////////////////////////////////////
+
 #include "serial.h"
 
 Serial::Serial(QObject *parent) : QObject(parent)
 {
   serial_port = new QSerialPort(this);
 
-  connect(serial_port, SIGNAL(readyRead()), this, SLOT(read()));
+  connect(serial_port, SIGNAL(readyRead()), this, SLOT(port_read()));
+
+  rx_state       = RX_IDLE_E;
+  rx_length      = 0;
+  rx_addr        = 0;
+  rx_timeout     = 0;
+  rx_crc_low     = 0;
+  rx_crc_high    = 0;
+  rx_crc_enabled = false;
+
+  rx_timer = new QTimer(this);
+  rx_timer->setInterval(10);
+  rx_timer->start();
+  connect(rx_timer, SIGNAL(timeout()), this, SLOT(rx_timer_timeout_slot()));
 }
+
 
 QList<QSerialPortInfo> Serial::list_serial_devices()
 {
   QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
   return ports;
 }
+
 
 bool Serial::port_connect(QString port_name)
 {
@@ -39,6 +75,7 @@ void Serial::port_disconnect()
   }
 }
 
+
 void Serial::port_write(QByteArray &data)
 {
   if (serial_port->isOpen()) {
@@ -47,13 +84,13 @@ void Serial::port_write(QByteArray &data)
 }
 
 
-void Serial::read()
+void Serial::port_read()
 {
   while (serial_port->bytesAvailable() != 0) {
     QByteArray data = serial_port->readAll();
-    emit read_recieved(data);
   }
 }
+
 
 void Serial::port_error(QSerialPort::SerialPortError error)
 {
@@ -97,4 +134,118 @@ void Serial::port_error(QSerialPort::SerialPortError error)
       serial_port->close();
     }
   }
+}
+
+
+void Serial::rx_set_rx_crc_enabled(bool setting)
+{
+  rx_crc_enabled = setting;
+}
+
+
+void Serial::rx_parser(QByteArray &data)
+{
+  unsigned char rx_data;
+
+  for (int i = 0; i < data.length(); i++) {
+
+    rx_data = data[i];
+
+    switch (rx_state) {
+
+      case RX_IDLE_E:
+
+        if (rx_data == LENGTH_8_BITS_C) {
+          rx_state   = RX_LENGTH_LOW_E;
+          rx_timeout = RX_TIMEOUT_C;
+          rx_addr    = 0;
+          rx_length  = 0;
+        } else if (rx_data == LENGTH_16_BITS_C) {
+          rx_state   = RX_LENGTH_HIGH_E;
+          rx_timeout = RX_TIMEOUT_C;
+          rx_addr    = 0;
+          rx_length  = 0;
+        }
+        break;
+
+
+    case RX_LENGTH_HIGH_E:
+
+      rx_length  = (unsigned int)rx_data << 8;
+      rx_state   = RX_LENGTH_LOW_E;
+      rx_timeout = RX_TIMEOUT_C;
+      break;
+
+
+    case RX_LENGTH_LOW_E:
+
+      rx_length |= (unsigned int)rx_data;
+
+      if (rx_length <= RX_BUFFER_SIZE_C && rx_length > 0) {
+        rx_state   = RX_READ_PAYLOAD_E;
+        rx_timeout = RX_TIMEOUT_C;
+      } else {
+        rx_state = RX_LENGTH_LOW_E;
+      }
+      break;
+
+
+    case RX_READ_PAYLOAD_E:
+
+      rx_buffer[rx_addr++] = rx_data;
+      if (rx_addr == RX_TIMEOUT_C) {
+        if (rx_crc_enabled) {
+          rx_state = RX_READ_CRC_LOW_E;
+        } else {
+          emit read_received(data);
+          rx_state = RX_IDLE_E;
+        }
+      }
+      rx_timeout = RX_TIMEOUT_C;
+      break;
+
+
+    case RX_READ_CRC_LOW_E:
+
+      rx_state    = RX_READ_CRC_HIGH_E;
+      rx_timeout  = RX_TIMEOUT_C;
+      rx_crc_high = rx_data;
+      break;
+
+
+    case RX_READ_CRC_HIGH_E:
+
+      rx_crc_low = rx_data;
+      rx_timeout = RX_TIMEOUT_C;
+      if (crc_16(rx_buffer, rx_length) == ((unsigned short)rx_crc_high << 8 | (unsigned short)rx_crc_low)) {
+        emit read_received(data);
+      }
+      break;
+
+
+    default:
+      rx_state = RX_IDLE_E;
+      break;
+    }
+  }
+}
+
+
+void Serial::rx_timer_timeout_slot()
+{
+  if (rx_timeout) {
+    rx_timeout--;
+  } else {
+    rx_state = RX_IDLE_E;
+  }
+}
+
+
+unsigned short Serial::crc_16(const unsigned char *buf, unsigned int len)
+{
+  unsigned short checksum = 0;
+  for (int i = 0; i < int(len); i++) {
+    checksum = crc_16_table[(((checksum >> 8) ^ *buf++) & 0xFF)] ^ (checksum << 8);
+  }
+  return checksum;
 }
