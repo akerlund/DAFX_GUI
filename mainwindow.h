@@ -23,9 +23,10 @@
 #define MAINWINDOW_H
 
 #include "serial.h"
+#include "qplot.h"
+#include "cmdline.h"
 
 #include <QMainWindow>
-#include <QVBoxLayout>
 #include <QPushButton>
 #include <QMenuBar>
 #include <QStatusBar>
@@ -33,6 +34,7 @@
 #include <QLabel>
 #include <QTabWidget>
 #include <QTextBrowser>
+#include <QCheckBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -40,7 +42,7 @@ QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT
+  Q_OBJECT
 
   QWidget      *main_widget;
   QVBoxLayout  *main_layout;
@@ -49,6 +51,9 @@ class MainWindow : public QMainWindow
   Serial       *serial_connection;
   QLabel       *serial_label;
 
+  Qplot        *plot;
+  CmdLine      *cmd_line;
+
   QWidget      *tab0;
   QVBoxLayout  *tab0_main_layout;
   QHBoxLayout  *tab0_header_layout;
@@ -56,8 +61,15 @@ class MainWindow : public QMainWindow
   QPushButton  *tab0_btn_update;
   QPushButton  *tab0_btn_connect;
   QPushButton  *tab0_btn_disconnect;
+  QCheckBox    *tab0_chk_parse_as_string;
+  QCheckBox    *tab0_chk_crc_enabled;
+  QLabel       *tab0_lbl_parse_as_string;
+  QLabel       *tab0_lbl_crc_enabled;
+  QGridLayout  *tab0_ckh_layout;
   QTextBrowser *tab0_text_browser;
+  QHBoxLayout  *tab0_footer_layout;
   QComboBox    *tab0_combo_input;
+  QPushButton  *tab0_btn_clear;
 
   QWidget      *tab1;
   QVBoxLayout  *tab1_layout;
@@ -71,8 +83,12 @@ private:
     Ui::MainWindow *ui;
 
 private slots:
-  void on_tab0_btn_update_clicked();
-  void on_tab0_btn_connect_clicked();
-  void on_tab0_btn_disconnect_clicked();
+  void when_tab0_btn_update_clicked();
+  void when_tab0_btn_connect_clicked();
+  void when_tab0_btn_disconnect_clicked();
+  void when_tab0_btn_clear_clicked();
+  void when_tab0_chk_parse_as_string_state(int state);
+  void when_tab0_chk_crc_enabled_state(int state);
+  void when_cmd_return_pressed(QString line);
 };
-#endif // MAINWINDOW_H
+#endif

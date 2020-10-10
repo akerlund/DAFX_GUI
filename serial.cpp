@@ -25,8 +25,6 @@ Serial::Serial(QObject *parent) : QObject(parent)
 {
   serial_port = new QSerialPort(this);
 
-  connect(serial_port, SIGNAL(readyRead()), this, SLOT(port_read()));
-
   rx_state           = RX_IDLE_E;
   rx_length          = 0;
   rx_addr            = 0;
@@ -39,6 +37,8 @@ Serial::Serial(QObject *parent) : QObject(parent)
   rx_timer = new QTimer(this);
   rx_timer->setInterval(10);
   rx_timer->start();
+
+  connect(serial_port, SIGNAL(readyRead()), this, SLOT(port_read()));
   connect(rx_timer, SIGNAL(timeout()), this, SLOT(rx_timer_timeout_slot()));
 }
 
@@ -75,6 +75,19 @@ void Serial::port_disconnect()
     serial_port->close();
   }
 }
+
+
+bool Serial::port_is_open()
+{
+  return serial_port->isOpen();
+}
+
+
+QString Serial::port_name()
+{
+  return serial_port->portName();
+}
+
 
 
 void Serial::port_write(QByteArray &data)

@@ -87,6 +87,8 @@ public:
   QList<QSerialPortInfo> list_serial_devices();
   bool port_connect(QString port_name);
   void port_disconnect();
+  bool port_is_open();
+  QString port_name();
   void port_write(QByteArray &data);
   void port_error(QSerialPort::SerialPortError error);
   void rx_parser(QByteArray &data);

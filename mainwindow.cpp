@@ -25,44 +25,58 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
+  this->setWindowTitle("New Title");
 
-  main_widget         = new QWidget();
-  main_layout         = new QVBoxLayout;
-  main_tab            = new QTabWidget();
+  main_widget              = new QWidget();
+  main_layout              = new QVBoxLayout;
+  main_tab                 = new QTabWidget();
 
-  serial_label        = new QLabel(this);
-  serial_connection   = new Serial();
+  serial_label             = new QLabel(this);
+  serial_connection        = new Serial();
+  cmd_line                 = new CmdLine();
 
-  tab0                = new QWidget();
-  tab0_main_layout    = new QVBoxLayout;
-  tab0_header_layout  = new QHBoxLayout;
-  tab0_serial_list    = new QComboBox();
-  tab0_btn_update     = new QPushButton();
-  tab0_btn_connect    = new QPushButton();
-  tab0_btn_disconnect = new QPushButton();
-  tab0_text_browser   = new QTextBrowser();
-  tab0_combo_input    = new QComboBox();
+  tab0                     = new QWidget();
+  tab0_main_layout         = new QVBoxLayout;
+  tab0_header_layout       = new QHBoxLayout;
+  tab0_serial_list         = new QComboBox();
+  tab0_btn_update          = new QPushButton();
+  tab0_btn_connect         = new QPushButton();
+  tab0_btn_disconnect      = new QPushButton();
+  tab0_ckh_layout          = new QGridLayout();
+  tab0_chk_parse_as_string = new QCheckBox();
+  tab0_chk_crc_enabled     = new QCheckBox();
+  tab0_lbl_parse_as_string = new QLabel("String Mode", this);
+  tab0_lbl_crc_enabled     = new QLabel("CRC Enabled", this);
+  tab0_text_browser        = new QTextBrowser();
+  tab0_footer_layout       = new QHBoxLayout;
+  tab0_combo_input         = new QComboBox();
+  tab0_btn_clear           = new QPushButton();
 
-  tab1                = new QWidget();
-  tab1_layout         = new QVBoxLayout;
+  plot                     = new Qplot();
+  tab1                     = new QWidget();
+  tab1_layout              = new QVBoxLayout;
 
-  connect(tab0_btn_update,     SIGNAL(clicked()), this, SLOT(on_tab0_btn_update_clicked()));
-  connect(tab0_btn_connect,    SIGNAL(clicked()), this, SLOT(on_tab0_btn_connect_clicked()));
-  connect(tab0_btn_disconnect, SIGNAL(clicked()), this, SLOT(on_tab0_btn_disconnect_clicked()));
+  connect(tab0_btn_update, SIGNAL(clicked()), this, SLOT(when_tab0_btn_update_clicked()));
+  connect(tab0_btn_connect, SIGNAL(clicked()), this, SLOT(when_tab0_btn_connect_clicked()));
+  connect(tab0_btn_disconnect, SIGNAL(clicked()), this, SLOT(when_tab0_btn_disconnect_clicked()));
+  connect(tab0_btn_clear, SIGNAL(clicked()), this, SLOT(when_tab0_btn_clear_clicked()));
+  connect(cmd_line, SIGNAL(return_pressed(QString)), this, SLOT(when_cmd_return_pressed(QString)));
+  connect(tab0_chk_parse_as_string, SIGNAL(stateChanged(int)), this, SLOT(when_tab0_chk_parse_as_string_state(int)));
+  connect(tab0_chk_crc_enabled, SIGNAL(stateChanged(int)), this, SLOT(when_tab0_chk_crc_enabled_state(int)));
 
   setCentralWidget(main_widget);
   main_widget->setLayout(main_layout);
   main_layout->addWidget(main_tab);
   ui->statusbar->addPermanentWidget(serial_label);
 
-  serial_label->setText("STATUS_OK");
+  serial_label->setText("NO_CONNECTION");
 
   main_tab->addTab(tab0, "Console");
   main_tab->addTab(tab1, "Other");
   main_tab->setTabPosition(QTabWidget::North);
 
   tab0->setLayout(tab0_main_layout);
-  tab0_main_layout->addLayout(tab0_header_layout);
+
   tab0_header_layout->addWidget(tab0_serial_list);
   tab0_header_layout->addWidget(tab0_btn_update);
   tab0_header_layout->addWidget(tab0_btn_connect);
@@ -73,12 +87,27 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   tab0_btn_connect->setMaximumWidth(100);
   tab0_btn_disconnect->setText("Disconnect");
   tab0_btn_disconnect->setMaximumWidth(100);
-  tab0_main_layout->addWidget(tab0_text_browser);
-  tab0_text_browser->setText("Hello");
-  tab0_main_layout->addWidget(tab0_combo_input);
-  tab0_combo_input->setEditable(true);
+  tab0_ckh_layout->addWidget(tab0_chk_parse_as_string, 0,0);
+  tab0_ckh_layout->addWidget(tab0_chk_crc_enabled, 1,0);
+  tab0_ckh_layout->addWidget(tab0_lbl_parse_as_string, 0,1);
+  tab0_ckh_layout->addWidget(tab0_lbl_crc_enabled, 1,1);
+  tab0_chk_parse_as_string->setMaximumWidth(15);
+  tab0_chk_crc_enabled->setMaximumWidth(15);
+  tab0_lbl_parse_as_string->setMaximumWidth(100);
+  tab0_lbl_crc_enabled->setMaximumWidth(100);
 
-  tab1->setLayout(tab1_layout);
+  tab0_header_layout->addLayout(tab0_ckh_layout);
+  tab0_text_browser->setText("Hello");
+  tab0_footer_layout->addWidget(cmd_line);
+  tab0_combo_input->setEditable(true);
+  tab0_footer_layout->addWidget(tab0_btn_clear);
+  tab0_btn_clear->setText("Clear");
+  tab0_btn_clear->setMaximumWidth(100);
+  tab0_main_layout->addLayout(tab0_header_layout);
+  tab0_main_layout->addWidget(tab0_text_browser);
+  tab0_main_layout->addLayout(tab0_footer_layout);
+
+  tab1->setLayout(plot->plot_layout);
 }
 
 MainWindow::~MainWindow()
@@ -86,9 +115,9 @@ MainWindow::~MainWindow()
   delete ui;
 }
 
-void MainWindow::on_tab0_btn_update_clicked()
+void MainWindow::when_tab0_btn_update_clicked()
 {
-  tab0_text_browser->append("on_tab0_btn_update_clicked");
+  tab0_text_browser->append("when_tab0_btn_update_clicked");
   QList<QSerialPortInfo> ports = serial_connection->list_serial_devices();
 
   foreach(const QSerialPortInfo &port, ports) {
@@ -96,16 +125,65 @@ void MainWindow::on_tab0_btn_update_clicked()
   }
 }
 
-void MainWindow::on_tab0_btn_connect_clicked()
+void MainWindow::when_tab0_btn_connect_clicked()
 {
-  tab0_text_browser->append("on_tab0_btn_connect_clicked");
+  tab0_text_browser->append("when_tab0_btn_connect_clicked");
   serial_connection->port_connect(tab0_serial_list->currentData().toString());
+
+  if (serial_connection->port_is_open()) {
+    serial_label->setText("CONNECTION_FAILED");
+  } else {
+    serial_label->setText(serial_connection->port_name());
+  }
 }
 
-void MainWindow::on_tab0_btn_disconnect_clicked()
+void MainWindow::when_tab0_btn_disconnect_clicked()
 {
-  tab0_text_browser->append("on_tab0_btn_disconnect_clicked");
+  tab0_text_browser->append("when_tab0_btn_disconnect_clicked");
   serial_connection->port_disconnect();
+  serial_label->setText("NO_CONNECTION");
+}
+
+
+void MainWindow::when_tab0_btn_clear_clicked()
+{
+  tab0_text_browser->clear();
+}
+
+
+void MainWindow::when_tab0_chk_parse_as_string_state(int state)
+{
+  if (state) {
+    serial_connection->rx_set_parse_as_string(true);
+    tab0_text_browser->append("INFO [serial] Parsing RX data as strings");
+  } else {
+    serial_connection->rx_set_parse_as_string(false);
+    tab0_text_browser->append("INFO [serial] Parsing RX data as packets");
+  }
+}
+
+
+void MainWindow::when_tab0_chk_crc_enabled_state(int state)
+{
+  if (state) {
+    serial_connection->rx_set_crc_enabled(true);
+    tab0_text_browser->append("INFO [serial] Enabled CRC");
+  } else {
+    serial_connection->rx_set_crc_enabled(false);
+    tab0_text_browser->append("INFO [serial] Disabled CRC");
+  }
+}
+
+
+void MainWindow::when_cmd_return_pressed(QString line)
+{
+  QByteArray tx_data = line.toUtf8();
+  tab0_text_browser->append(line);
+  if (serial_connection->port_is_open()) {
+    serial_connection->port_write(tx_data);
+  } else {
+    tab0_text_browser->append("ERROR [serial] Port is not open");
+  }
 }
 
 
