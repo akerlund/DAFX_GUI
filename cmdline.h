@@ -26,6 +26,9 @@
 #include <QHBoxLayout>
 #include <QComboBox>
 #include <QKeyEvent>
+#include <QFile>
+#include <QMap>
+#include <QRegularExpression>
 
 class CmdLine : public QWidget
 {
@@ -33,9 +36,13 @@ class CmdLine : public QWidget
 
 public:
   explicit CmdLine(QWidget *parent = nullptr);
+  bool cmd_parser(QString cmd);
+  void load_cmd_file();
   bool eventFilter(QObject *object, QEvent *e);
 
 private:
+
+  QMap<QString, int> commands;
 
   QComboBox    *cmd_line;
   QHBoxLayout  *cmd_layout;

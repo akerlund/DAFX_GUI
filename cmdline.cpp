@@ -33,6 +33,43 @@ CmdLine::CmdLine(QWidget *parent) : QWidget(parent)
   this->installEventFilter(this);
 }
 
+bool CmdLine::cmd_parser(QString cmd)
+{
+  QRegularExpression re_write("\\w+\\d\\d");
+  QRegularExpression re_read("\\w+\\d");
+  QRegularExpressionMatch match;
+
+  // Write
+  match = re_write.match(cmd);
+  if (match.hasMatch()) {
+   QString operation = match.captured(0);
+   QString address   = match.captured(1);
+   QString value     = match.captured(2);
+  }
+
+  // Read
+  match = re_read.match(cmd);
+  if (match.hasMatch()) {
+   QString operation = match.captured(0);
+   QString address   = match.captured(1);
+  }
+
+  return true;
+}
+
+void CmdLine::load_cmd_file()
+{
+  QFile file("cmd_file.txt");
+  if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    return;
+  }
+
+  while (!file.atEnd()) {
+    QString str   = QString::fromStdString(file.readLine().toStdString());
+    commands[str] = 0;
+  }
+}
+
 bool CmdLine::eventFilter(QObject *object, QEvent *event)
 {
   if (event->type() == QEvent::KeyPress) {
