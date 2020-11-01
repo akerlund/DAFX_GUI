@@ -56,6 +56,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   tab1                     = new QWidget();
   tab1_layout              = new QVBoxLayout;
 
+  connect(serial_connection, SIGNAL(error_message(QString)), this, SLOT(when_port_error(QString)));
+  connect(serial_connection, SIGNAL(read_received(QByteArray)), this, SLOT(when_read_received(QByteArray)));
+
   connect(tab0_btn_update, SIGNAL(clicked()), this, SLOT(when_tab0_btn_update_clicked()));
   connect(tab0_btn_connect, SIGNAL(clicked()), this, SLOT(when_tab0_btn_connect_clicked()));
   connect(tab0_btn_disconnect, SIGNAL(clicked()), this, SLOT(when_tab0_btn_disconnect_clicked()));
@@ -108,6 +111,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   tab0_main_layout->addLayout(tab0_footer_layout);
 
   tab1->setLayout(plot->plot_layout);
+
+  when_tab0_btn_update_clicked();
 }
 
 MainWindow::~MainWindow()
@@ -117,8 +122,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::when_tab0_btn_update_clicked()
 {
-  tab0_text_browser->append("when_tab0_btn_update_clicked");
   QList<QSerialPortInfo> ports = serial_connection->list_serial_devices();
+
+  tab0_serial_list->clear();
 
   foreach(const QSerialPortInfo &port, ports) {
     tab0_serial_list->addItem(port.portName(), port.systemLocation());
@@ -127,21 +133,29 @@ void MainWindow::when_tab0_btn_update_clicked()
 
 void MainWindow::when_tab0_btn_connect_clicked()
 {
-  tab0_text_browser->append("when_tab0_btn_connect_clicked");
-  serial_connection->port_connect(tab0_serial_list->currentData().toString());
+  if (!serial_connection->port_connect(tab0_serial_list->currentData().toString())) {
+    tab0_text_browser->append("INFO [serial] CONNECTION_FAILED");
+  }
 
-  if (serial_connection->port_is_open()) {
+  if (!serial_connection->port_is_open()) {
     serial_label->setText("CONNECTION_FAILED");
   } else {
+    tab0_text_browser->append("INFO [serial] Connected to" + tab0_serial_list->currentData().toString());
     serial_label->setText(serial_connection->port_name());
   }
 }
 
 void MainWindow::when_tab0_btn_disconnect_clicked()
 {
-  tab0_text_browser->append("when_tab0_btn_disconnect_clicked");
-  serial_connection->port_disconnect();
-  serial_label->setText("NO_CONNECTION");
+
+  if (serial_connection->port_is_open()) {
+    serial_connection->port_disconnect();
+    tab0_text_browser->append("INFO [serial] Disconnected");
+    serial_label->setText("Disconnected");
+  } else {
+    tab0_text_browser->append("INFO [serial] Not connected");
+    serial_label->setText("Unconnected");
+  }
 }
 
 
@@ -184,6 +198,19 @@ void MainWindow::when_cmd_return_pressed(QString line)
   } else {
     tab0_text_browser->append("ERROR [serial] Port is not open");
   }
+}
+
+
+void MainWindow::when_read_received(QByteArray data) {
+
+  tab0_text_browser->append(QString::fromStdString(data.toStdString()).trimmed());
+}
+
+
+
+void MainWindow::when_port_error(QString error) {
+
+  tab0_text_browser->append(error);
 }
 
 

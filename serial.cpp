@@ -94,7 +94,8 @@ void Serial::port_write(QByteArray &data)
 {
   if (serial_port->isOpen()) {
     serial_port->write(data);
-   }
+  }
+  serial_port->flush();
 }
 
 
@@ -102,6 +103,7 @@ void Serial::port_read()
 {
   while (serial_port->bytesAvailable() != 0) {
     QByteArray data = serial_port->readAll();
+    rx_parser(data);
   }
 }
 
@@ -192,7 +194,7 @@ void Serial::rx_parser(QByteArray &data)
       case RX_FIND_NEWLINE_E:
 
         rx_buffer[rx_addr++] = rx_data;
-        if (rx_data == '\n') {
+        if (rx_data == '\n' || rx_data == '\r') {
           rx_state = RX_IDLE_E;
           emit read_received(data);
         }

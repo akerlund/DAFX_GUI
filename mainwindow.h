@@ -83,6 +83,8 @@ private:
     Ui::MainWindow *ui;
 
 private slots:
+  void when_read_received(QByteArray);
+  void when_port_error(QString);
   void when_tab0_btn_update_clicked();
   void when_tab0_btn_connect_clicked();
   void when_tab0_btn_disconnect_clicked();
