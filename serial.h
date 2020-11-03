@@ -110,6 +110,7 @@ private:
   // Receieve state machine
   rx_state_t    rx_state;
   unsigned char rx_buffer[RX_BUFFER_SIZE_C];
+  QByteArray    rx_string;
   unsigned int  rx_length;
   unsigned int  rx_addr;
   int           rx_timeout;
