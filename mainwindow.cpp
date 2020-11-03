@@ -25,7 +25,7 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
-  this->setWindowTitle("New Title");
+  this->setWindowTitle("SerialPortInterface");
 
   main_widget              = new QWidget();
   main_layout              = new QVBoxLayout;
@@ -56,16 +56,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   tab1                     = new QWidget();
   tab1_layout              = new QVBoxLayout;
 
-  connect(serial_connection, SIGNAL(error_message(QString)), this, SLOT(when_port_error(QString)));
-  connect(serial_connection, SIGNAL(read_received(QByteArray)), this, SLOT(when_read_received(QByteArray)));
-
-  connect(tab0_btn_update, SIGNAL(clicked()), this, SLOT(when_tab0_btn_update_clicked()));
-  connect(tab0_btn_connect, SIGNAL(clicked()), this, SLOT(when_tab0_btn_connect_clicked()));
-  connect(tab0_btn_disconnect, SIGNAL(clicked()), this, SLOT(when_tab0_btn_disconnect_clicked()));
-  connect(tab0_btn_clear, SIGNAL(clicked()), this, SLOT(when_tab0_btn_clear_clicked()));
-  connect(cmd_line, SIGNAL(return_pressed(QString)), this, SLOT(when_cmd_return_pressed(QString)));
-  connect(tab0_chk_parse_as_string, SIGNAL(stateChanged(int)), this, SLOT(when_tab0_chk_parse_as_string_state(int)));
-  connect(tab0_chk_crc_enabled, SIGNAL(stateChanged(int)), this, SLOT(when_tab0_chk_crc_enabled_state(int)));
 
   setCentralWidget(main_widget);
   main_widget->setLayout(main_layout);
@@ -100,7 +90,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   tab0_lbl_crc_enabled->setMaximumWidth(100);
 
   tab0_header_layout->addLayout(tab0_ckh_layout);
-  tab0_text_browser->setText("Hello");
   tab0_footer_layout->addWidget(cmd_line);
   tab0_combo_input->setEditable(true);
   tab0_footer_layout->addWidget(tab0_btn_clear);
@@ -112,7 +101,21 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
   tab1->setLayout(plot->plot_layout);
 
+  // Parsing RX data as strings
+  tab0_chk_parse_as_string->setChecked(true);
+  serial_connection->rx_set_parse_as_string(true);
+
   when_tab0_btn_update_clicked();
+
+  connect(serial_connection, SIGNAL(error_message(QString)), this, SLOT(when_port_error(QString)));
+  connect(serial_connection, SIGNAL(read_received(QByteArray)), this, SLOT(when_read_received(QByteArray)));
+  connect(tab0_btn_update, SIGNAL(clicked()), this, SLOT(when_tab0_btn_update_clicked()));
+  connect(tab0_btn_connect, SIGNAL(clicked()), this, SLOT(when_tab0_btn_connect_clicked()));
+  connect(tab0_btn_disconnect, SIGNAL(clicked()), this, SLOT(when_tab0_btn_disconnect_clicked()));
+  connect(tab0_btn_clear, SIGNAL(clicked()), this, SLOT(when_tab0_btn_clear_clicked()));
+  connect(cmd_line, SIGNAL(return_pressed(QString)), this, SLOT(when_cmd_return_pressed(QString)));
+  connect(tab0_chk_parse_as_string, SIGNAL(stateChanged(int)), this, SLOT(when_tab0_chk_parse_as_string_state(int)));
+  connect(tab0_chk_crc_enabled, SIGNAL(stateChanged(int)), this, SLOT(when_tab0_chk_crc_enabled_state(int)));
 }
 
 MainWindow::~MainWindow()

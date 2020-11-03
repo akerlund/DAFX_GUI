@@ -20,6 +20,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "serial.h"
+#include <QDebug>
 
 Serial::Serial(QObject *parent) : QObject(parent)
 {
@@ -37,6 +38,9 @@ Serial::Serial(QObject *parent) : QObject(parent)
   rx_timer = new QTimer(this);
   rx_timer->setInterval(10);
   rx_timer->start();
+
+  re_axi_wr = QRegularExpression("^wr\\s+(\\d*)\\s+(\\d*)");
+  re_axi_rd = QRegularExpression("^rd\\s+(\\d*)$");
 
   connect(serial_port, SIGNAL(readyRead()), this, SLOT(port_read()));
   connect(rx_timer, SIGNAL(timeout()), this, SLOT(rx_timer_timeout_slot()));
@@ -89,12 +93,104 @@ QString Serial::port_name()
 }
 
 
+bool Serial::cmd_read(QByteArray &data)
+{
+  QByteArray tx_data;
+  int number;
+
+  // Checking if this is an AXI read command
+  match    = re_axi_rd.match(QString::fromStdString(data.toStdString()).trimmed());
+  hasMatch = match.hasMatch();
+
+  if (hasMatch) {
+
+    QString araddr = match.captured(1);
+
+    tx_data.append(LENGTH_8_BITS_C);
+    tx_data.append(9);
+
+    // Append awaddr
+    number = araddr.toInt();
+    tx_data.append((char)number >> 24);
+    tx_data.append((char)number >> 16);
+    tx_data.append((char)number >>  8);
+    tx_data.append((char)number);
+
+    qDebug() << tx_data.size();
+
+    if (serial_port->isOpen()) {
+      serial_port->write(tx_data);
+    }
+    serial_port->flush();
+    return true;
+
+  } else {
+    return false;
+  }
+}
+
+
+bool Serial::cmd_write(QByteArray &data)
+{
+  QByteArray tx_data;
+  int number;
+
+  // Checking if this is an AXI write command
+  match    = re_axi_wr.match(QString::fromStdString(data.toStdString()).trimmed());
+  hasMatch = match.hasMatch();
+
+  if (hasMatch) {
+
+    QString awaddr = match.captured(1);
+    QString wdata  = match.captured(2);
+
+    tx_data.append(LENGTH_8_BITS_C);
+    tx_data.append(9);
+
+    // Append awaddr
+    number = awaddr.toInt();
+    tx_data.append((char)number >> 24);
+    tx_data.append((char)number >> 16);
+    tx_data.append((char)number >>  8);
+    tx_data.append((char)number);
+
+    // Append wdata
+    number = wdata.toInt();
+    tx_data.append((char)number >> 24);
+    tx_data.append((char)number >> 16);
+    tx_data.append((char)number >>  8);
+    tx_data.append((char)number);
+
+    qDebug() << tx_data.size();
+
+    if (serial_port->isOpen()) {
+      serial_port->write(tx_data);
+    }
+    serial_port->flush();
+    return true;
+
+  } else {
+    return false;
+  }
+}
+
 
 void Serial::port_write(QByteArray &data)
 {
+  QByteArray tx_data;
+  int tx_length = data.size();
+
+  if (cmd_write(data)) { return; }
+  if (cmd_read(data))  { return; }
+
+  tx_data.append(LENGTH_8_BITS_C);
+  tx_data.append((char)tx_length);
+  tx_data.append(data);
+
   if (serial_port->isOpen()) {
-    serial_port->write(data);
+    serial_port->write(tx_data);
   }
+
   serial_port->flush();
 }
 

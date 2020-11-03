@@ -27,6 +27,7 @@
 #include <QSerialPortInfo>
 #include <QByteArray>
 #include <QTimer>
+#include <QRegularExpression>
 
 typedef enum {
   RX_IDLE_E,
@@ -94,8 +95,12 @@ public:
   void rx_parser(QByteArray &data);
   void rx_set_crc_enabled(bool setting);
   void rx_set_parse_as_string(bool setting);
-  unsigned short crc_16(const unsigned char *buf, unsigned int len);
 
+private:
+
+  unsigned short crc_16(const unsigned char *buf, unsigned int len);
+  bool cmd_write(QByteArray &data);
+  bool cmd_read(QByteArray &data);
 
 private:
 
@@ -112,6 +117,11 @@ private:
   unsigned char rx_crc_high;
   bool          rx_crc_enabled;
   bool          rx_parse_as_string;
+
+  QRegularExpressionMatch match;
+  bool hasMatch;
+  QRegularExpression re_axi_wr;
+  QRegularExpression re_axi_rd;
 
 signals:
   void read_received(QByteArray data);
