@@ -111,14 +111,11 @@ bool Serial::cmd_read(QByteArray &data)
     tx_data.append('R');
 
     // Append awaddr
-    number = araddr.toInt();
-    tx_data.append((char)number >> 24);
-    tx_data.append((char)number >> 16);
-    tx_data.append((char)number >>  8);
-    tx_data.append((char)number);
-
-    qDebug() << tx_data.size();
-    qDebug() << araddr;
+    number = araddr.toUInt();
+    tx_data.append((char)((number >> 24) & 0xFF));
+    tx_data.append((char)((number >> 16) & 0xFF));
+    tx_data.append((char)((number >> 8)  & 0xFF));
+    tx_data.append((char) (number        & 0xFF));
 
     if (serial_port->isOpen()) {
       serial_port->write(tx_data);
@@ -151,25 +148,23 @@ bool Serial::cmd_write(QByteArray &data)
     tx_data.append('W');
 
     // Append awaddr
-    number = awaddr.toInt();
-    tx_data.append((char)number >> 24);
-    tx_data.append((char)number >> 16);
-    tx_data.append((char)number >>  8);
-    tx_data.append((char)number);
+    number = awaddr.toUInt();
+    tx_data.append((char)((number >> 24) & 0xFF));
+    tx_data.append((char)((number >> 16) & 0xFF));
+    tx_data.append((char)((number >> 8)  & 0xFF));
+    tx_data.append((char) (number        & 0xFF));
 
     // Append wdata
-    number = wdata.toInt();
-    tx_data.append((char)number >> 24);
-    tx_data.append((char)number >> 16);
-    tx_data.append((char)number >>  8);
-    tx_data.append((char)number);
-
-    qDebug() << tx_data.size();
+    number = wdata.toUInt();
+    tx_data.append((char)((number >> 24) & 0xFF));
+    tx_data.append((char)((number >> 16) & 0xFF));
+    tx_data.append((char)((number >> 8)  & 0xFF));
+    tx_data.append((char) (number        & 0xFF));
 
     if (serial_port->isOpen()) {
       serial_port->write(tx_data);
     }
-    //serial_port->flush();
+
     return true;
 
   } else {
@@ -183,10 +178,8 @@ void Serial::port_write(QByteArray &data)
   QByteArray tx_data;
   int tx_length = data.size();
 
-  if (cmd_write(data)) { qDebug() << "Was a write"; return; }
-  if (cmd_read(data))  { qDebug() << "Was a read";  return; }
-
-  qDebug() << "Was not a command";
+  if (cmd_write(data)) { return; }
+  if (cmd_read(data))  { return; }
 
   tx_data.append(LENGTH_8_BITS_C);
   tx_data.append((char)tx_length);
