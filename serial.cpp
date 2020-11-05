@@ -95,8 +95,10 @@ QString Serial::port_name()
 
 bool Serial::cmd_read(QByteArray &data)
 {
-  QByteArray tx_data;
+  QByteArray tx_packet;
+  QByteArray tx_payload;
   int number;
+  unsigned short crc;
 
   // Checking if this is an AXI read command
   match    = re_axi_rd.match(QString::fromStdString(data.toStdString()).trimmed());
@@ -106,21 +108,31 @@ bool Serial::cmd_read(QByteArray &data)
 
     QString araddr = match.captured(1);
 
-    tx_data.append(LENGTH_8_BITS_C);
-    tx_data.append(5);
-    tx_data.append('R');
+    // Append read command
+    tx_payload.append('R');
 
-    // Append awaddr
+    // Append araddr
     number = araddr.toUInt();
-    tx_data.append((char)((number >> 24) & 0xFF));
-    tx_data.append((char)((number >> 16) & 0xFF));
-    tx_data.append((char)((number >> 8)  & 0xFF));
-    tx_data.append((char) (number        & 0xFF));
+    tx_payload.append((char)((number >> 24) & 0xFF));
+    tx_payload.append((char)((number >> 16) & 0xFF));
+    tx_payload.append((char)((number >> 8)  & 0xFF));
+    tx_payload.append((char) (number        & 0xFF));
+
+    // CRC
+    crc = crc_16((const unsigned char*)tx_payload.constData(), 5);
+
+    // Packet
+    tx_packet.append(LENGTH_8_BITS_C);
+    tx_packet.append(5);
+    tx_packet.append(tx_payload);
+    tx_packet.append((char)((crc >> 8)  & 0xFF));
+    tx_packet.append((char) (crc        & 0xFF));
 
     if (serial_port->isOpen()) {
-      serial_port->write(tx_data);
+      serial_port->write(tx_packet);
+      serial_port->flush();
     }
-    serial_port->flush();
+
     return true;
 
   } else {
@@ -131,8 +143,10 @@ bool Serial::cmd_read(QByteArray &data)
 
 bool Serial::cmd_write(QByteArray &data)
 {
-  QByteArray tx_data;
+  QByteArray tx_packet;
+  QByteArray tx_payload;
   int number;
+  unsigned short crc;
 
   // Checking if this is an AXI write command
   match    = re_axi_wr.match(QString::fromStdString(data.toStdString()).trimmed());
@@ -143,26 +157,36 @@ bool Serial::cmd_write(QByteArray &data)
     QString awaddr = match.captured(1);
     QString wdata  = match.captured(2);
 
-    tx_data.append(LENGTH_8_BITS_C);
-    tx_data.append(9);
-    tx_data.append('W');
+    // Append write command
+    tx_payload.append('W');
 
     // Append awaddr
     number = awaddr.toUInt();
-    tx_data.append((char)((number >> 24) & 0xFF));
-    tx_data.append((char)((number >> 16) & 0xFF));
-    tx_data.append((char)((number >> 8)  & 0xFF));
-    tx_data.append((char) (number        & 0xFF));
+    tx_payload.append((char)((number >> 24) & 0xFF));
+    tx_payload.append((char)((number >> 16) & 0xFF));
+    tx_payload.append((char)((number >> 8)  & 0xFF));
+    tx_payload.append((char) (number        & 0xFF));
 
     // Append wdata
     number = wdata.toUInt();
-    tx_data.append((char)((number >> 24) & 0xFF));
-    tx_data.append((char)((number >> 16) & 0xFF));
-    tx_data.append((char)((number >> 8)  & 0xFF));
-    tx_data.append((char) (number        & 0xFF));
+    tx_payload.append((char)((number >> 24) & 0xFF));
+    tx_payload.append((char)((number >> 16) & 0xFF));
+    tx_payload.append((char)((number >> 8)  & 0xFF));
+    tx_payload.append((char) (number        & 0xFF));
+
+    // CRC
+    crc = crc_16((const unsigned char*)tx_payload.constData(), 9);
+
+    // Packet
+    tx_packet.append(LENGTH_8_BITS_C);
+    tx_packet.append(9);
+    tx_packet.append(tx_payload);
+    tx_packet.append((char)((crc >> 8)  & 0xFF));
+    tx_packet.append((char) (crc        & 0xFF));
 
     if (serial_port->isOpen()) {
-      serial_port->write(tx_data);
+      serial_port->write(tx_packet);
+      serial_port->flush();
     }
 
     return true;
