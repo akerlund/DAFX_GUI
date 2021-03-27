@@ -25,6 +25,7 @@
 #include "serial.h"
 #include "qplot.h"
 #include "cmdline.h"
+#include "vbytearray.h"
 
 #include <QMainWindow>
 #include <QPushButton>

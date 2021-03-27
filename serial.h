@@ -29,6 +29,8 @@
 #include <QTimer>
 #include <QRegularExpression>
 
+#include "qhost_defines.h"
+
 typedef enum {
   RX_IDLE_E,
   RX_FIND_NEWLINE_E,
@@ -80,10 +82,9 @@ class Serial : public QObject
   Q_OBJECT
 
 private:
-  static const unsigned int  RX_BUFFER_SIZE_C = 4096;
-  static const unsigned int  RX_TIMEOUT_C     = 50;
-  static const unsigned char LENGTH_8_BITS_C  = 0xAA;
-  static const unsigned char LENGTH_16_BITS_C = 0x55;
+
+  static const unsigned int RX_BUFFER_SIZE_C = 4096;
+  static const unsigned int RX_TIMEOUT_C     = 50;
 
 public:
 
@@ -98,6 +99,7 @@ public:
   void rx_parser(QByteArray &data);
   void rx_set_crc_enabled(bool setting);
   void rx_set_parse_as_string(bool setting);
+  bool rx_get_parse_as_string();
 
 private:
 

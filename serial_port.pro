@@ -14,14 +14,17 @@ SOURCES += \
     mainwindow.cpp \
     qcustomplot.cpp \
     qplot.cpp \
-    serial.cpp
+    serial.cpp \
+    vbytearray.cpp
 
 HEADERS += \
     cmdline.h \
     mainwindow.h \
     qcustomplot.h \
     qplot.h \
-    serial.h
+    serial.h \
+    vbytearray.h \
+    qhost_defines.h
 
 FORMS += \
     mainwindow.ui

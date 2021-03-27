@@ -283,9 +283,16 @@ void Serial::rx_set_parse_as_string(bool setting)
 }
 
 
+bool Serial::rx_get_parse_as_string()
+{
+  return rx_parse_as_string;
+}
+
+
 void Serial::rx_parser(QByteArray &data)
 {
   unsigned char rx_data;
+  bool          crc_enabled;
 
   for (int i = 0; i < data.length(); i++) {
 
@@ -301,11 +308,25 @@ void Serial::rx_parser(QByteArray &data)
         rx_string.append(rx_data);
         rx_timeout = RX_TIMEOUT_C;
 
-        if (rx_parse_as_string) {
+        //if (rx_parse_as_string) {
+        //  rx_state = RX_FIND_NEWLINE_E;
+        //} else
+
+        crc_enabled = rx_data & CRC_ENABLED_BIT_C; //
+
+        if (rx_data & STRING_ENABLED_BIT_C) {
+            qDebug() << "is_string = true";
+        } else {
+            qDebug() << "is_string = false";
+        }
+        qDebug() << rx_data;
+
+        if (rx_data & STRING_ENABLED_BIT_C) {
           rx_state = RX_FIND_NEWLINE_E;
-        } else if (rx_data == LENGTH_8_BITS_C) {
+          rx_string.clear();
+        } else if ((rx_data & LENGTH_8_BITS_C) == LENGTH_8_BITS_C) {
           rx_state = RX_LENGTH_LOW_E;
-        } else if (rx_data == LENGTH_16_BITS_C) {
+        } else if ((rx_data & LENGTH_16_BITS_C) == LENGTH_16_BITS_C) {
           rx_state = RX_LENGTH_HIGH_E;
         }
         break;
@@ -347,7 +368,7 @@ void Serial::rx_parser(QByteArray &data)
 
         rx_buffer[rx_addr++] = rx_data;
         if (rx_addr == rx_length) {
-          if (rx_crc_enabled) {
+          if (crc_enabled) {
             rx_state = RX_READ_CRC_LOW_E;
           } else {
             emit read_received(data);

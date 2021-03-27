@@ -103,7 +103,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
   // Parsing RX data as strings
   tab0_chk_parse_as_string->setChecked(true);
+  tab0_chk_crc_enabled->setChecked(true);
   serial_connection->rx_set_parse_as_string(true);
+  serial_connection->rx_set_crc_enabled(true);
 
   when_tab0_btn_update_clicked();
 
@@ -206,7 +208,23 @@ void MainWindow::when_cmd_return_pressed(QString line)
 
 void MainWindow::when_read_received(QByteArray data) {
 
-  tab0_text_browser->append(QString::fromStdString(data.toStdString()).trimmed());
+  VByteArray byte_array;
+  unsigned char PLOT_0_C = 0xA0;
+
+  if (serial_connection->rx_get_parse_as_string()) {
+    tab0_text_browser->append(QString::fromStdString(data.toStdString()).trimmed());
+    return;
+  }
+
+  if (data[0] == PLOT_0_C) {
+    byte_array = VByteArray();
+    byte_array.vbAppendUint8(data[0]);
+    byte_array.vbAppendUint8(data[1]);
+    byte_array.vbAppendUint8(data[2]);
+    byte_array.vbAppendUint8(data[3]);
+    plot->append_to_plot((double)byte_array.vbPopFrontUint32());
+  }
+
 }
 
 
