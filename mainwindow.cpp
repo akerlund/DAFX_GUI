@@ -99,7 +99,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
   tab2                     = new QWidget();
   tab2_layout              = new QVBoxLayout;
-  _mix_channel             = new MixChannel();
+  _mix_channel             = new MixChannel(42);
   tab2->setLayout(_mix_channel->main_layout);
 
   main_tab->addTab(tab0, "Console");
