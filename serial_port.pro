@@ -15,7 +15,8 @@ SOURCES += \
     qcustomplot.cpp \
     qplot.cpp \
     serial.cpp \
-    vbytearray.cpp
+    vbytearray.cpp \
+    mixchannel.cpp
 
 HEADERS += \
     cmdline.h \
@@ -24,7 +25,8 @@ HEADERS += \
     qplot.h \
     serial.h \
     vbytearray.h \
-    qhost_defines.h
+    qhost_defines.h \
+    mixchannel.h
 
 FORMS += \
     mainwindow.ui

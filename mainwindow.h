@@ -26,6 +26,7 @@
 #include "qplot.h"
 #include "cmdline.h"
 #include "vbytearray.h"
+#include "mixchannel.h"
 
 #include <QMainWindow>
 #include <QPushButton>
@@ -75,6 +76,9 @@ class MainWindow : public QMainWindow
   QWidget      *tab1;
   QVBoxLayout  *tab1_layout;
 
+  QWidget      *tab2;
+  QVBoxLayout  *tab2_layout;
+  MixChannel   *_mix_channel;
 
 public:
     MainWindow(QWidget *parent = nullptr);

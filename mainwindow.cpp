@@ -56,7 +56,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   tab1                     = new QWidget();
   tab1_layout              = new QVBoxLayout;
 
-
   setCentralWidget(main_widget);
   main_widget->setLayout(main_layout);
   main_layout->addWidget(main_tab);
@@ -64,9 +63,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
   serial_label->setText("NO_CONNECTION");
 
-  main_tab->addTab(tab0, "Console");
-  main_tab->addTab(tab1, "Other");
-  main_tab->setTabPosition(QTabWidget::North);
 
   tab0->setLayout(tab0_main_layout);
 
@@ -100,6 +96,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   tab0_main_layout->addLayout(tab0_footer_layout);
 
   tab1->setLayout(plot->plot_layout);
+
+  tab2                     = new QWidget();
+  tab2_layout              = new QVBoxLayout;
+  _mix_channel             = new MixChannel();
+  tab2->setLayout(_mix_channel->main_layout);
+
+  main_tab->addTab(tab0, "Console");
+  main_tab->addTab(tab1, "Other");
+  main_tab->addTab(tab2, "Mixer");
+  main_tab->setTabPosition(QTabWidget::North);
+  main_tab->setCurrentIndex(2);
 
   // Parsing RX data as strings
   tab0_chk_parse_as_string->setChecked(true);
