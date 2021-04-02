@@ -22,8 +22,8 @@
 #include "serial.h"
 #include <QDebug>
 
-Serial::Serial(QObject *parent) : QObject(parent)
-{
+Serial::Serial(QObject *parent) : QObject(parent) {
+
   serial_port = new QSerialPort(this);
 
   rx_state           = RX_IDLE_E;
@@ -47,21 +47,17 @@ Serial::Serial(QObject *parent) : QObject(parent)
 }
 
 
-QList<QSerialPortInfo> Serial::list_serial_devices()
-{
+QList<QSerialPortInfo> Serial::list_serial_devices() {
   QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
   return ports;
 }
 
 
-bool Serial::port_connect(QString port_name)
-{
+bool Serial::port_connect(QString port_name) {
   serial_port->setPortName(port_name);
   serial_port->open(QIODevice::ReadWrite);
 
-  if(!serial_port->isOpen()) {
-    return false;
-  }
+  if (!serial_port->isOpen()) { return false; }
 
   serial_port->setBaudRate(QSerialPort::Baud115200);
   serial_port->setDataBits(QSerialPort::Data8);
@@ -73,28 +69,23 @@ bool Serial::port_connect(QString port_name)
 }
 
 
-void Serial::port_disconnect()
-{
-  if (serial_port->isOpen()) {
-    serial_port->close();
-  }
+void Serial::port_disconnect() {
+  if (serial_port->isOpen()) { serial_port->close(); }
 }
 
 
-bool Serial::port_is_open()
-{
+bool Serial::port_is_open() {
   return serial_port->isOpen();
 }
 
 
-QString Serial::port_name()
-{
+QString Serial::port_name() {
   return serial_port->portName();
 }
 
 
-bool Serial::cmd_read(QByteArray &data)
-{
+bool Serial::cmd_read(QByteArray &data) {
+
   QByteArray tx_packet;
   QByteArray tx_payload;
   int number;
@@ -141,8 +132,8 @@ bool Serial::cmd_read(QByteArray &data)
 }
 
 
-bool Serial::cmd_write(QByteArray &data)
-{
+bool Serial::cmd_write(QByteArray &data) {
+
   QByteArray tx_packet;
   QByteArray tx_payload;
   int number;
@@ -197,8 +188,8 @@ bool Serial::cmd_write(QByteArray &data)
 }
 
 
-void Serial::port_write(QByteArray &data)
-{
+void Serial::port_write(QByteArray &data) {
+
   QByteArray tx_data;
   int tx_length = data.size();
 
@@ -212,13 +203,12 @@ void Serial::port_write(QByteArray &data)
   if (serial_port->isOpen()) {
     serial_port->write(tx_data);
   }
-
   serial_port->flush();
 }
 
 
-void Serial::port_read()
-{
+void Serial::port_read() {
+
   while (serial_port->bytesAvailable() != 0) {
     QByteArray data = serial_port->readAll();
     rx_parser(data);
@@ -226,8 +216,8 @@ void Serial::port_read()
 }
 
 
-void Serial::port_error(QSerialPort::SerialPortError error)
-{
+void Serial::port_error(QSerialPort::SerialPortError error) {
+
   QString message;
 
   switch (error) {
@@ -271,26 +261,22 @@ void Serial::port_error(QSerialPort::SerialPortError error)
 }
 
 
-void Serial::rx_set_crc_enabled(bool setting)
-{
+void Serial::rx_set_crc_enabled(bool setting) {
   rx_crc_enabled = setting;
 }
 
 
-void Serial::rx_set_parse_as_string(bool setting)
-{
+void Serial::rx_set_parse_as_string(bool setting) {
   rx_parse_as_string = setting;
 }
 
 
-bool Serial::rx_get_parse_as_string()
-{
+bool Serial::rx_get_parse_as_string() {
   return rx_parse_as_string;
 }
 
 
-void Serial::rx_parser(QByteArray &data)
-{
+void Serial::rx_parser(QByteArray &data) {
   unsigned char rx_data;
   bool          crc_enabled;
 
@@ -405,8 +391,8 @@ void Serial::rx_parser(QByteArray &data)
 }
 
 
-void Serial::rx_timer_timeout_slot()
-{
+void Serial::rx_timer_timeout_slot() {
+
   if (rx_timeout) {
     rx_timeout--;
   } else {
@@ -415,8 +401,8 @@ void Serial::rx_timer_timeout_slot()
 }
 
 
-unsigned short Serial::crc_16(const unsigned char *buf, unsigned int len)
-{
+unsigned short Serial::crc_16(const unsigned char *buf, unsigned int len) {
+
   unsigned short checksum = 0;
   for (int i = 0; i < int(len); i++) {
     checksum = crc_16_table[(((checksum >> 8) ^ *buf++) & 0xFF)] ^ (checksum << 8);

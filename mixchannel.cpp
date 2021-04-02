@@ -31,14 +31,20 @@ MixChannel::MixChannel(int mix_id, QObject *parent) : QObject(parent)
   _dia_pan->setNotchesVisible(true);
   _dia_pan->setMaximumWidth(50);
   _dia_pan->setMaximumHeight(50);
+  _dia_pan->setMinimum(-100);
+  _dia_pan->setMaximum(100);
   _sli_gain->setOrientation(Qt::Vertical);
   _sli_gain->setMaximumHeight(300);
   _sli_gain->setMaximumWidth(25);
-  _sli_gain->setSliderPosition(50);
+  _sli_gain->setMinimum(0);
+  _sli_gain->setMaximum(200);
+  _sli_gain->setSliderPosition(100);
   _sli_freq->setOrientation(Qt::Vertical);
   _sli_freq->setMaximumHeight(300);
   _sli_freq->setMaximumWidth(25);
-  _sli_gain->setSliderPosition(50);
+  _sli_freq->setMinimum(20);
+  _sli_freq->setMaximum(2000);
+  _sli_freq->setSliderPosition(444);
   _qle_pan->setMaximumWidth(50);
   _qle_gain->setMaximumWidth(50);
   _qle_freq->setMaximumWidth(50);
@@ -50,6 +56,7 @@ MixChannel::MixChannel(int mix_id, QObject *parent) : QObject(parent)
   _cmb_wave->setMaximumWidth(50);
   _sli_duty->setMaximumWidth(50);
   _sli_duty->setOrientation(Qt::Horizontal);
+  _sli_duty->setMinimum(1);
   _sli_duty->setSliderPosition(50);
 
   _body_layout->addWidget(_lbl_gain, 0, 0);
