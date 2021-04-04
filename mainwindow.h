@@ -40,6 +40,7 @@
 #include <QCheckBox>
 #include <QList>
 #include <QFrame>
+#include <QTimer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -80,7 +81,7 @@ class MainWindow : public QMainWindow
   QPushButton  *tab0_btn_clear;
 
   QWidget      *tab1;
-  QVBoxLayout  *tab1_layout;
+  QHBoxLayout  *tab1_layout;
 
   QWidget      *tab2;
   QHBoxLayout  *tab2_layout;
@@ -89,6 +90,19 @@ class MainWindow : public QMainWindow
   QFrame *_qframe;
 
   Biquad *_bq;
+  QVBoxLayout  *tab1_ctrl_layout;
+  QDial        *_dia_f;
+  QDial        *_dia_q;
+  QComboBox    *_cmb_f_type;
+  QLabel       *_tab1_lbl_f;
+  QLabel       *_tab1_lbl_q;
+  QLabel       *_tab1_lbl_t;
+  QLineEdit *_tab1_qle_f;
+  QLineEdit *_tab1_qle_q;
+  int samples;
+  QLineEdit *_qle_f;
+
+  QTimer *_bq_timer;
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -113,6 +127,8 @@ private slots:
   void when_freq_changed(int id, int value);
   void when_wave_changed(int id, int value);
   void when_duty_changed(int id, int value);
+  void when_filter_changed();
+  void update_filter_plot();
 };
 
 #endif

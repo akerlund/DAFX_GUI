@@ -27,6 +27,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   ui->setupUi(this);
   this->setWindowTitle("SerialPortInterface");
 
+  // MainWindow
   main_widget              = new QWidget();
   main_layout              = new QVBoxLayout;
   main_tab                 = new QTabWidget();
@@ -35,6 +36,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   serial_connection        = new Serial();
   cmd_line                 = new CmdLine();
 
+  setCentralWidget(main_widget);
+  main_widget->setLayout(main_layout);
+  main_layout->addWidget(main_tab);
+  ui->statusbar->addPermanentWidget(serial_label);
+  serial_label->setText("NO_CONNECTION");
+
+  // Tab 0
   tab0                     = new QWidget();
   tab0_main_layout         = new QVBoxLayout;
   tab0_header_layout       = new QHBoxLayout;
@@ -51,20 +59,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   tab0_footer_layout       = new QHBoxLayout;
   tab0_combo_input         = new QComboBox();
   tab0_btn_clear           = new QPushButton();
-
-  plot                     = new Qplot();
-  tab1                     = new QWidget();
-  tab1_layout              = new QVBoxLayout;
-
-  setCentralWidget(main_widget);
-  main_widget->setLayout(main_layout);
-  main_layout->addWidget(main_tab);
-  ui->statusbar->addPermanentWidget(serial_label);
-
-  serial_label->setText("NO_CONNECTION");
-
-
-  tab0->setLayout(tab0_main_layout);
 
   tab0_header_layout->addWidget(tab0_serial_list);
   tab0_header_layout->addWidget(tab0_btn_update);
@@ -91,12 +85,70 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   tab0_footer_layout->addWidget(tab0_btn_clear);
   tab0_btn_clear->setText("Clear");
   tab0_btn_clear->setMaximumWidth(100);
+  tab0->setLayout(tab0_main_layout);
   tab0_main_layout->addLayout(tab0_header_layout);
   tab0_main_layout->addWidget(tab0_text_browser);
   tab0_main_layout->addLayout(tab0_footer_layout);
 
-  tab1->setLayout(plot->plot_layout);
+  // Tab 1
+  tab1                     = new QWidget();
+  tab1_layout              = new QHBoxLayout;
+  plot                     = new Qplot();
+  tab1_ctrl_layout         = new QVBoxLayout();
 
+  _tab1_lbl_f = new QLabel("F");
+  _tab1_lbl_q = new QLabel("Q");
+  _tab1_lbl_t = new QLabel("T");
+  _dia_f                   = new QDial();
+  _dia_q                   = new QDial();
+  _dia_f->setMinimum(20);
+  _dia_f->setMaximum(10000);
+  _dia_q->setMinimum(1);
+  _dia_q->setMaximum(5);
+  _dia_q->setMaximumWidth(50);
+  _dia_q->setMaximumHeight(50);
+  _dia_f->setMaximumWidth(50);
+  _dia_f->setMaximumHeight(50);
+  _qle_f = new QLineEdit("0");
+  _cmb_f_type              = new QComboBox();
+  _cmb_f_type->insertItem(0, "LP");
+  _cmb_f_type->insertItem(1, "BP");
+  _cmb_f_type->insertItem(2, "HP");
+  _cmb_f_type->setMaximumWidth(50);
+  _tab1_qle_f = new QLineEdit("0");
+  _tab1_qle_q = new QLineEdit("0");
+  _bq_timer = new QTimer(this);
+  _bq_timer->setInterval(100);
+  connect(_bq_timer, SIGNAL(timeout()), this, SLOT(update_filter_plot()));
+
+  tab1_ctrl_layout->addWidget(_tab1_lbl_f);
+  tab1_ctrl_layout->addWidget(_dia_f);
+  tab1_ctrl_layout->addWidget(_tab1_lbl_q);
+  tab1_ctrl_layout->addWidget(_dia_q);
+  tab1_ctrl_layout->addWidget(_tab1_lbl_t);
+  tab1_ctrl_layout->addWidget(_cmb_f_type);
+  tab1_ctrl_layout->addStretch();
+  tab1_layout->addLayout(plot->plot_layout);
+  tab1_layout->addLayout(tab1_ctrl_layout);
+  tab1->setLayout(tab1_layout);
+
+  connect(_dia_f,  &QSlider::valueChanged, this, &MainWindow::when_filter_changed);
+  connect(_dia_q,  &QSlider::valueChanged, this, &MainWindow::when_filter_changed);
+  connect(_cmb_f_type, static_cast<void (QComboBox::*)(int index)>(&QComboBox::currentIndexChanged),
+          this,      static_cast<void (MainWindow::*)()>(&MainWindow::when_filter_changed));
+
+
+  _bq = new Biquad();
+  bq_coefficients_t bq_coefficients = _bq->bq_coefficients(BQ_LP_E, 2000.0, 44100.0, 1.0);
+  _bq->bq_normalize(bq_coefficients);
+  samples = 1000;
+  plot->set_nr_of_x_values(samples);
+  for (int i = 0; i < samples; i++) {
+    plot->append_to_plot(_bq->bq_magnitude_response(bq_coefficients, 44100.0/samples*i, 44100));
+  }
+  plot->plot_update();
+
+  // Tab 2
   tab2        = new QWidget();
   tab2_layout = new QHBoxLayout;
 
@@ -131,34 +183,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
   when_tab0_btn_update_clicked();
 
-  connect(serial_connection, SIGNAL(error_message(QString)), this, SLOT(when_port_error(QString)));
-  connect(serial_connection, SIGNAL(read_received(QByteArray)), this, SLOT(when_read_received(QByteArray)));
-  connect(tab0_btn_update, SIGNAL(clicked()), this, SLOT(when_tab0_btn_update_clicked()));
-  connect(tab0_btn_connect, SIGNAL(clicked()), this, SLOT(when_tab0_btn_connect_clicked()));
-  connect(tab0_btn_disconnect, SIGNAL(clicked()), this, SLOT(when_tab0_btn_disconnect_clicked()));
-  connect(tab0_btn_clear, SIGNAL(clicked()), this, SLOT(when_tab0_btn_clear_clicked()));
-  connect(cmd_line, SIGNAL(return_pressed(QString)), this, SLOT(when_cmd_return_pressed(QString)));
-  connect(tab0_chk_parse_as_string, SIGNAL(stateChanged(int)), this, SLOT(when_tab0_chk_parse_as_string_state(int)));
-  connect(tab0_chk_crc_enabled, SIGNAL(stateChanged(int)), this, SLOT(when_tab0_chk_crc_enabled_state(int)));
-
-  _bq = new Biquad();
-  bq_coefficients_t bq_coefficients = _bq->bq_coefficients(BQ_LP_E, 2000.0, 44100.0, 1.0);
-  _bq->bq_normalize(bq_coefficients);
-  int samples = 400;
-  plot->set_nr_of_x_values(samples);
-  for (int i = 0; i < samples; i++) {
-    plot->append_to_plot(_bq->bq_magnitude_response(bq_coefficients, 44100.0/samples*i, 44100));
-  }
-  plot->plot_update();
+  connect(serial_connection,        SIGNAL(error_message(QString)),    this, SLOT(when_port_error(QString)));
+  connect(serial_connection,        SIGNAL(read_received(QByteArray)), this, SLOT(when_read_received(QByteArray)));
+  connect(tab0_btn_update,          SIGNAL(clicked()),                 this, SLOT(when_tab0_btn_update_clicked()));
+  connect(tab0_btn_connect,         SIGNAL(clicked()),                 this, SLOT(when_tab0_btn_connect_clicked()));
+  connect(tab0_btn_disconnect,      SIGNAL(clicked()),                 this, SLOT(when_tab0_btn_disconnect_clicked()));
+  connect(tab0_btn_clear,           SIGNAL(clicked()),                 this, SLOT(when_tab0_btn_clear_clicked()));
+  connect(cmd_line,                 SIGNAL(return_pressed(QString)),   this, SLOT(when_cmd_return_pressed(QString)));
+  connect(tab0_chk_parse_as_string, SIGNAL(stateChanged(int)),         this, SLOT(when_tab0_chk_parse_as_string_state(int)));
+  connect(tab0_chk_crc_enabled,     SIGNAL(stateChanged(int)),         this, SLOT(when_tab0_chk_crc_enabled_state(int)));
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
   delete ui;
 }
 
-void MainWindow::when_tab0_btn_update_clicked()
-{
+void MainWindow::when_tab0_btn_update_clicked() {
   QList<QSerialPortInfo> ports = serial_connection->list_serial_devices();
 
   tab0_serial_list->clear();
@@ -168,8 +208,7 @@ void MainWindow::when_tab0_btn_update_clicked()
   }
 }
 
-void MainWindow::when_tab0_btn_connect_clicked()
-{
+void MainWindow::when_tab0_btn_connect_clicked() {
   if (!serial_connection->port_connect(tab0_serial_list->currentData().toString())) {
     tab0_text_browser->append("INFO [serial] CONNECTION_FAILED");
   }
@@ -182,9 +221,7 @@ void MainWindow::when_tab0_btn_connect_clicked()
   }
 }
 
-void MainWindow::when_tab0_btn_disconnect_clicked()
-{
-
+void MainWindow::when_tab0_btn_disconnect_clicked() {
   if (serial_connection->port_is_open()) {
     serial_connection->port_disconnect();
     tab0_text_browser->append("INFO [serial] Disconnected");
@@ -196,14 +233,12 @@ void MainWindow::when_tab0_btn_disconnect_clicked()
 }
 
 
-void MainWindow::when_tab0_btn_clear_clicked()
-{
+void MainWindow::when_tab0_btn_clear_clicked() {
   tab0_text_browser->clear();
 }
 
 
-void MainWindow::when_tab0_chk_parse_as_string_state(int state)
-{
+void MainWindow::when_tab0_chk_parse_as_string_state(int state) {
   if (state) {
     serial_connection->rx_set_parse_as_string(true);
     tab0_text_browser->append("INFO [serial] Parsing RX data as strings");
@@ -214,8 +249,7 @@ void MainWindow::when_tab0_chk_parse_as_string_state(int state)
 }
 
 
-void MainWindow::when_tab0_chk_crc_enabled_state(int state)
-{
+void MainWindow::when_tab0_chk_crc_enabled_state(int state) {
   if (state) {
     serial_connection->rx_set_crc_enabled(true);
     tab0_text_browser->append("INFO [serial] Enabled CRC");
@@ -226,8 +260,7 @@ void MainWindow::when_tab0_chk_crc_enabled_state(int state)
 }
 
 
-void MainWindow::when_cmd_return_pressed(QString line)
-{
+void MainWindow::when_cmd_return_pressed(QString line) {
   QByteArray tx_data = line.toUtf8();
   tab0_text_browser->append(line);
   if (serial_connection->port_is_open()) {
@@ -277,4 +310,22 @@ void MainWindow::when_wave_changed(int id, int value) {
 }
 void MainWindow::when_duty_changed(int id, int value) {
     tab0_text_browser->append(QString::number(id));
+}
+
+void MainWindow::update_filter_plot() {
+  _bq_timer->stop();
+  bq_coefficients_t bq_coefficients;
+  bq_coefficients = _bq->bq_coefficients(bq_type_t(_cmb_f_type->currentIndex()), _dia_f->value(), 44100.0, 1.0);//_dia_q->value());
+  _bq->bq_normalize(bq_coefficients);
+  plot->set_nr_of_x_values(samples);
+  for (int i = 0; i < samples; i++) {
+    plot->append_to_plot(_bq->bq_magnitude_response(bq_coefficients, 44100.0/samples*i, 44100));
+  }
+  plot->plot_update();
+}
+
+
+void MainWindow::when_filter_changed() {
+  _bq_timer->start();
+  _qle_f->setText(QString::number(_dia_f->value()));
 }
