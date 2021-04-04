@@ -10,23 +10,23 @@ CONFIG += c++11
 
 SOURCES += \
     cmdline.cpp \
-    main.cpp \
     mainwindow.cpp \
     qcustomplot.cpp \
     qplot.cpp \
     serial.cpp \
     vbytearray.cpp \
-    mixchannel.cpp
+    mixchannel.cpp \
+    main.cpp \
 
 HEADERS += \
     cmdline.h \
-    mainwindow.h \
     qcustomplot.h \
     qplot.h \
     serial.h \
     vbytearray.h \
     qhost_defines.h \
-    mixchannel.h
+    mixchannel.h \
+    mainwindow.h
 
 FORMS += \
     mainwindow.ui

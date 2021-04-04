@@ -27,7 +27,7 @@
 #include "cmdline.h"
 #include "vbytearray.h"
 #include "mixchannel.h"
-
+#include <QApplication>
 #include <QMainWindow>
 #include <QPushButton>
 #include <QMenuBar>
@@ -37,14 +37,19 @@
 #include <QTabWidget>
 #include <QTextBrowser>
 #include <QCheckBox>
+#include <QList>
+#include <QFrame>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+
 class MainWindow : public QMainWindow
 {
   Q_OBJECT
+
+  const int MIXER_CHANNELS_C = 5;
 
   QWidget      *main_widget;
   QVBoxLayout  *main_layout;
@@ -77,8 +82,10 @@ class MainWindow : public QMainWindow
   QVBoxLayout  *tab1_layout;
 
   QWidget      *tab2;
-  QVBoxLayout  *tab2_layout;
+  QHBoxLayout  *tab2_layout;
   MixChannel   *_mix_channel;
+  QList<MixChannel*> _mix_lst;
+  QFrame *_qframe;
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -97,5 +104,12 @@ private slots:
   void when_tab0_chk_parse_as_string_state(int state);
   void when_tab0_chk_crc_enabled_state(int state);
   void when_cmd_return_pressed(QString line);
+
+  void when_pan_changed(int id, int value);
+  void when_gain_changed(int id, int value);
+  void when_freq_changed(int id, int value);
+  void when_wave_changed(int id, int value);
+  void when_duty_changed(int id, int value);
 };
+
 #endif

@@ -58,7 +58,7 @@ private slots:
   void when_gain1_changed();
   void when_freq0_changed(int value);
   void when_freq1_changed();
-  void when_wave_changed();
+  void when_wave_changed(int value);
   void when_duty0_changed(int value);
   void when_duty1_changed();
 };

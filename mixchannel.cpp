@@ -78,7 +78,6 @@ MixChannel::MixChannel(int mix_id, QObject *parent) : QObject(parent)
   _head_layout->addStretch();
 
   main_layout->addLayout(_head_layout);
-  main_layout->addStretch();
 
   connect(_dia_pan,  &QSlider::valueChanged,      this, &MixChannel::when_pan0_changed);
   connect(_qle_pan,  &QLineEdit::editingFinished, this, &MixChannel::when_pan1_changed);
@@ -88,6 +87,9 @@ MixChannel::MixChannel(int mix_id, QObject *parent) : QObject(parent)
 
   connect(_sli_freq, &QSlider::valueChanged,      this, &MixChannel::when_freq0_changed);
   connect(_qle_freq, &QLineEdit::editingFinished, this, &MixChannel::when_freq1_changed);
+
+  connect(_cmb_wave, static_cast<void (QComboBox::*)(int index)>(&QComboBox::currentIndexChanged),
+          this,      static_cast<void (MixChannel::*)(int index)>(&MixChannel::when_wave_changed));
 
   connect(_sli_duty, &QSlider::valueChanged,      this, &MixChannel::when_duty0_changed);
   connect(_qle_duty, &QLineEdit::editingFinished, this, &MixChannel::when_duty1_changed);
@@ -126,8 +128,8 @@ void MixChannel::when_freq1_changed() {
   emit freq_value_changed(_id, _qle_freq->text().toInt());
 }
 
-void MixChannel::when_wave_changed() {
-
+void MixChannel::when_wave_changed(int value) {
+  emit wave_value_changed(_id, value);
 }
 
 void MixChannel::when_duty0_changed(int value) {
