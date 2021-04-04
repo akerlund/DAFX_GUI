@@ -140,6 +140,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   connect(cmd_line, SIGNAL(return_pressed(QString)), this, SLOT(when_cmd_return_pressed(QString)));
   connect(tab0_chk_parse_as_string, SIGNAL(stateChanged(int)), this, SLOT(when_tab0_chk_parse_as_string_state(int)));
   connect(tab0_chk_crc_enabled, SIGNAL(stateChanged(int)), this, SLOT(when_tab0_chk_crc_enabled_state(int)));
+
+  _bq = new Biquad();
+  bq_coefficients_t bq_coefficients = _bq->bq_coefficients(BQ_LP_E, 44100, 1.0);
+  for (int i = 0; i < 100; i++) {
+    plot->append_to_plot(_bq->bq_magnitude_response(bq_coefficients, 44100/100*i));
+  }
+  plot->plot_update();
 }
 
 MainWindow::~MainWindow()

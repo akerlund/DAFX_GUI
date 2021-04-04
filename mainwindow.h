@@ -27,6 +27,7 @@
 #include "cmdline.h"
 #include "vbytearray.h"
 #include "mixchannel.h"
+#include "biquad.h"
 #include <QApplication>
 #include <QMainWindow>
 #include <QPushButton>
@@ -86,6 +87,8 @@ class MainWindow : public QMainWindow
   MixChannel   *_mix_channel;
   QList<MixChannel*> _mix_lst;
   QFrame *_qframe;
+
+  Biquad *_bq;
 
 public:
     MainWindow(QWidget *parent = nullptr);
