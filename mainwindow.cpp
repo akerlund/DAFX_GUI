@@ -121,7 +121,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   main_tab->addTab(tab1, "Other");
   main_tab->addTab(tab2, "Mixer");
   main_tab->setTabPosition(QTabWidget::North);
-  main_tab->setCurrentIndex(2);
+  main_tab->setCurrentIndex(1);
 
   // Parsing RX data as strings
   tab0_chk_parse_as_string->setChecked(true);
@@ -142,9 +142,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   connect(tab0_chk_crc_enabled, SIGNAL(stateChanged(int)), this, SLOT(when_tab0_chk_crc_enabled_state(int)));
 
   _bq = new Biquad();
-  bq_coefficients_t bq_coefficients = _bq->bq_coefficients(BQ_LP_E, 44100, 1.0);
-  for (int i = 0; i < 100; i++) {
-    plot->append_to_plot(_bq->bq_magnitude_response(bq_coefficients, 44100/100*i));
+  bq_coefficients_t bq_coefficients = _bq->bq_coefficients(BQ_LP_E, 2000.0, 44100.0, 1.0);
+  _bq->bq_normalize(bq_coefficients);
+  int samples = 400;
+  plot->set_nr_of_x_values(samples);
+  for (int i = 0; i < samples; i++) {
+    plot->append_to_plot(_bq->bq_magnitude_response(bq_coefficients, 44100.0/samples*i, 44100));
   }
   plot->plot_update();
 }

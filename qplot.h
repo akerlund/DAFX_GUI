@@ -18,6 +18,7 @@ public:
   void append_to_plot(double value);
   void plot_update();
   QVBoxLayout  *plot_layout;
+  void set_nr_of_x_values(int value);
 
 
 private:

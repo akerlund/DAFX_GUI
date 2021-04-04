@@ -41,8 +41,9 @@ class Biquad {
 
 public:
   Biquad();
-  bq_coefficients_t bq_coefficients(bq_type_t bq_type, double w0, double Q);
-  double bq_magnitude_response(bq_coefficients_t bqc, double w0);
+  bq_coefficients_t bq_coefficients(bq_type_t bq_type, double f0, double Fs, double Q);
+  void bq_normalize(bq_coefficients_t &bqc);
+  double bq_magnitude_response(bq_coefficients_t bqc, double f, double Fs);
 
 };
 

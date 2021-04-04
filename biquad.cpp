@@ -28,9 +28,10 @@ Biquad::Biquad()
 
 }
 
-bq_coefficients_t Biquad::bq_coefficients(bq_type_t bq_type, double w0, double Q) {
+bq_coefficients_t Biquad::bq_coefficients(bq_type_t bq_type, double f0, double Fs, double Q) {
 
   bq_coefficients_t bqc;
+  double w0 = 2*3.1415*f0/Fs;
   double alfa = sin(w0) / (2*Q);
 
   if (bq_type == BQ_LP_E) {
@@ -63,11 +64,21 @@ bq_coefficients_t Biquad::bq_coefficients(bq_type_t bq_type, double w0, double Q
   return bqc;
 }
 
+void Biquad::bq_normalize(bq_coefficients_t &bqc) {
+  bqc.b0 = bqc.b0 / bqc.a0;
+  bqc.b1 = bqc.b1 / bqc.a0;
+  bqc.b2 = bqc.b2 / bqc.a0;
+  bqc.a1 = bqc.a1 / bqc.a0;
+  bqc.a2 = bqc.a2 / bqc.a0;
+  bqc.a0 = 1.0;
+}
+
 // http://rs-met.com/documents/dsp/BasicDigitalFilters.pdf
-double Biquad::bq_magnitude_response(bq_coefficients_t bqc, double w0) {
+double Biquad::bq_magnitude_response(bq_coefficients_t bqc, double f, double Fs) {
   
   double numerator;
   double divisor;
+  double w0 = 2*3.1415*f/Fs;
 
   numerator = bqc.b0*bqc.b0 + bqc.b1*bqc.b1 + bqc.b2*bqc.b2 +
               2*(bqc.b0*bqc.b1 + bqc.b1*bqc.b2)*cos(w0) +
