@@ -16,8 +16,10 @@ public:
   ~Qplot();
 
   void append_to_plot(double value);
+  void set_plot(QVector<double> *vector);
   void plot_update();
   QVBoxLayout  *plot_layout;
+  void set_max_x(double value);
   void set_nr_of_x_values(int value);
 
 
@@ -33,6 +35,7 @@ private:
   QCustomPlot *plot;
   QVector<double> plot_x;
   QVector<double> plot_y;
+  double max_x;
   int nr_of_x_values;
 
 

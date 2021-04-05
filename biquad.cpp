@@ -23,16 +23,15 @@
 #include <cmath>
 #include <stdint.h>
 
-Biquad::Biquad()
-{
+Biquad::Biquad() {
 
 }
 
-bq_coefficients_t Biquad::bq_coefficients(bq_type_t bq_type, double f0, double Fs, double Q) {
+bq_coefficients_t Biquad::bq_coefficients(bq_type_t bq_type, double f0, double fs, double q) {
 
   bq_coefficients_t bqc;
-  double w0 = 2*3.1415*f0/Fs;
-  double alfa = sin(w0) / (2*Q);
+  double w0 = 2*M_PI*f0/fs;
+  double alfa = sin(w0) / (2*q);
 
   if (bq_type == BQ_LP_E) {
     bqc.b0 = (1 - cos(w0)) / 2;
@@ -74,19 +73,28 @@ void Biquad::bq_normalize(bq_coefficients_t &bqc) {
 }
 
 // http://rs-met.com/documents/dsp/BasicDigitalFilters.pdf
-double Biquad::bq_magnitude_response(bq_coefficients_t bqc, double f, double Fs) {
-  
+QVector<double> Biquad::bq_magnitude_response(bq_coefficients_t bqc, double fs, int n) {
+
+  QVector<double> res;
   double numerator;
   double divisor;
-  double w0 = 2*3.1415*f/Fs;
+  double w0;
+  double f;
+  double num0 = bqc.b0*bqc.b0 + bqc.b1*bqc.b1 + bqc.b2*bqc.b2;
+  double num1 = 2*(bqc.b0*bqc.b1 + bqc.b1*bqc.b2);
+  double num2 = 2*bqc.b0*bqc.b2;
+  double div0 = 1 + bqc.a1*bqc.a1 + bqc.a2*bqc.a2;
+  double div1 = 2*(bqc.a1 + bqc.a1*bqc.a2);
+  double div2 = 2*bqc.a2;
 
-  numerator = bqc.b0*bqc.b0 + bqc.b1*bqc.b1 + bqc.b2*bqc.b2 +
-              2*(bqc.b0*bqc.b1 + bqc.b1*bqc.b2)*cos(w0) +
-              2*bqc.b0*bqc.b2*cos(2*w0);
+  for (int i = 0; i < n; i++) {
+    f  = fs/2/n*i;
+    w0 = 2*M_PI*f/fs;
 
-  divisor = 1 + bqc.a1*bqc.a1 + bqc.a2*bqc.a2 +
-            2*(bqc.a1 + bqc.a1*bqc.a2)*cos(w0) +
-            2*bqc.a2*cos(2*w0); 
+    numerator = num0 + num1*cos(w0) + num2*cos(2*w0);
+    divisor   = div0 + div1*cos(w0) + div2*cos(2*w0);
+    res.append(sqrt(numerator/divisor));
+  }
 
-  return sqrt(numerator/divisor);  
+  return res;
 }

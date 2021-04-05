@@ -17,9 +17,20 @@ Qplot::Qplot(QObject *parent) : QObject(parent)
   plot->legend->setFont(legendFont);
   plot->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignRight|Qt::AlignBottom);
   plot->legend->setBrush(QBrush(QColor(255,255,255,230)));
-  plot->xAxis->setLabel("X Axis");
-  plot->yAxis->setLabel("Y Axis");
+  plot->xAxis->setLabel("f");
+  plot->yAxis->setLabel("dB");
 
+  QSharedPointer<QCPAxisTickerLog> logTicker(new QCPAxisTickerLog);
+  plot->yAxis->grid()->setSubGridVisible(true);
+  plot->xAxis->grid()->setSubGridVisible(true);
+  plot->xAxis->setScaleType(QCPAxis::stLogarithmic);
+  plot->xAxis->setTicker(logTicker);
+  plot->xAxis->setNumberFormat("eb"); // e = exponential, b = beautiful decimal powers
+  plot->xAxis->setNumberPrecision(0); // makes sure "1*10^4" is displayed only as "10^4"
+//  plot->yAxis->setScaleType(QCPAxis::stLogarithmic);
+//  plot->yAxis->setTicker(logTicker);
+//  plot->yAxis->setNumberFormat("eb"); // e = exponential, b = beautiful decimal powers
+//  plot->yAxis->setNumberPrecision(0); // makes sure "1*10^4" is displayed only as "10^4"
 
   // Initialize the plot data
   nr_of_x_values = 100;
@@ -44,6 +55,11 @@ void Qplot::append_to_plot(double value) {
   plot_update();
 }
 
+void Qplot::set_plot(QVector<double> *vector) {
+  plot_y = *vector;
+  plot_update();
+}
+
 
 void Qplot::plot_update() {
   plot->graph(0)->setData(plot_x, plot_y);
@@ -60,16 +76,21 @@ void Qplot::plot_timer_timeout_slot() {
 void Qplot::shift_in_to_vector(QVector<double> *vector, double value, int max_size) {
   vector->append(value);
   if (vector->size() > max_size) {
-    vector->remove(0, vector->size( ) - max_size);
+    vector->remove(0, vector->size() - max_size);
   }
 }
 
 
 void Qplot::reset_x_axis() {
+  double _x = max_x / nr_of_x_values;
   plot_x.clear();
   for (int i = 0; i < nr_of_x_values; i++) {
-    plot_x.append(i);
+    plot_x.append(i*_x);
   }
+}
+
+void Qplot::set_max_x(double value) {
+  max_x = value;
 }
 
 
