@@ -18,6 +18,8 @@ SOURCES += \
     vbytearray.cpp \
     mixchannel.cpp \
     main.cpp \
+    mixer.cpp \
+    filter.cpp
 
 HEADERS += \
     biquad.h \
@@ -28,7 +30,9 @@ HEADERS += \
     vbytearray.h \
     qhost_defines.h \
     mixchannel.h \
-    mainwindow.h
+    mainwindow.h \
+    mixer.h \
+    filter.h
 
 FORMS += \
     mainwindow.ui

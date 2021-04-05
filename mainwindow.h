@@ -29,6 +29,7 @@
 #include "vbytearray.h"
 #include "mixchannel.h"
 #include "biquad.h"
+#include "filter.h"
 #include <QApplication>
 #include <QMainWindow>
 #include <QPushButton>
@@ -81,29 +82,15 @@ class MainWindow : public QMainWindow
   QComboBox    *tab0_combo_input;
   QPushButton  *tab0_btn_clear;
 
-  QWidget      *tab1;
-  QHBoxLayout  *tab1_layout;
+  Filter       *_filter;
 
+  QWidget      *tab1;
   QWidget      *tab2;
   QHBoxLayout  *tab2_layout;
   MixChannel   *_mix_channel;
   QList<MixChannel*> _mix_lst;
   QFrame *_qframe;
 
-  Biquad *_bq;
-  QVBoxLayout  *tab1_ctrl_layout;
-  QDial        *_dia_f;
-  QDial        *_dia_q;
-  QComboBox    *_cmb_f_type;
-  QLabel       *_tab1_lbl_f;
-  QLabel       *_tab1_lbl_q;
-  QLabel       *_tab1_lbl_t;
-  QLineEdit *_tab1_qle_f;
-  QLineEdit *_tab1_qle_q;
-  int samples;
-  QLineEdit *_qle_f;
-
-  QTimer *_bq_timer;
 
 public:
     MainWindow(QWidget *parent = nullptr);
@@ -128,8 +115,6 @@ private slots:
   void when_freq_changed(int id, int value);
   void when_wave_changed(int id, int value);
   void when_duty_changed(int id, int value);
-  void when_filter_changed();
-  void update_filter_plot();
 };
 
 #endif

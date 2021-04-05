@@ -91,68 +91,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   tab0_main_layout->addWidget(tab0_text_browser);
   tab0_main_layout->addLayout(tab0_footer_layout);
 
+
   // Tab 1
-  samples = 500;
+  //samples = 500;
+  _filter = new Filter();
+  tab1 = new QWidget();
+  tab1->setLayout(_filter->main_layout);
 
-  tab1             = new QWidget();
-  tab1_layout      = new QHBoxLayout;
-  tab1_ctrl_layout = new QVBoxLayout();
-
-  plot = new Qplot();
-  plot->set_max_x(44100/2);
-  plot->set_nr_of_x_values(samples);
-
-  _tab1_lbl_f = new QLabel("F");
-  tab1_ctrl_layout->addWidget(_tab1_lbl_f);
-  _dia_f = new QDial();
-  _dia_f->setMinimum(20);
-  _dia_f->setMaximum(20000);
-  _dia_f->setValue(1000);
-  _dia_f->setMaximumWidth(50);
-  _dia_f->setMaximumHeight(50);
-  tab1_ctrl_layout->addWidget(_dia_f);
-  _tab1_qle_f = new QLineEdit("0");
-  _tab1_qle_f->setText(QString::number(_dia_f->value()));
-  _tab1_qle_f->setMaximumWidth(100);
-  tab1_ctrl_layout->addWidget(_tab1_qle_f);
-  _tab1_lbl_q = new QLabel("Q");
-  tab1_ctrl_layout->addWidget(_tab1_lbl_q);
-  _dia_q = new QDial();
-  _dia_q->setMinimum(0);
-  _dia_q->setMaximum(500);
-  _dia_q->setMaximumWidth(50);
-  _dia_q->setMaximumHeight(50);
-  _dia_q->setValue(100);
-  tab1_ctrl_layout->addWidget(_dia_q);
-  _tab1_qle_q = new QLineEdit("0");
-  _tab1_qle_q->setText(QString::number(_dia_q->value()/100)+"."+QString::number(_dia_q->value()%100));
-  _tab1_qle_q->setMaximumWidth(100);
-  tab1_ctrl_layout->addWidget(_tab1_qle_q);
-  _tab1_lbl_t = new QLabel("Wave");
-  tab1_ctrl_layout->addWidget(_tab1_lbl_t);
-  _cmb_f_type = new QComboBox();
-  _cmb_f_type->insertItem(0, "LP");
-  _cmb_f_type->insertItem(1, "BP");
-  _cmb_f_type->insertItem(2, "HP");
-  _cmb_f_type->setMaximumWidth(50);
-  tab1_ctrl_layout->addWidget(_cmb_f_type);
-
-  _bq_timer = new QTimer(this);
-  _bq_timer->setInterval(100);
-  connect(_bq_timer, SIGNAL(timeout()), this, SLOT(update_filter_plot()));
-
-  tab1_ctrl_layout->addStretch();
-  tab1_layout->addLayout(plot->plot_layout);
-  tab1_layout->addLayout(tab1_ctrl_layout);
-  tab1->setLayout(tab1_layout);
-
-  connect(_dia_f,  &QSlider::valueChanged, this, &MainWindow::when_filter_changed);
-  connect(_dia_q,  &QSlider::valueChanged, this, &MainWindow::when_filter_changed);
-  connect(_cmb_f_type, static_cast<void (QComboBox::*)(int index)>(&QComboBox::currentIndexChanged),
-          this,      static_cast<void (MainWindow::*)()>(&MainWindow::when_filter_changed));
-
-  _bq = new Biquad();
-  update_filter_plot();
 
   // Tab 2
   tab2        = new QWidget();
@@ -316,25 +261,4 @@ void MainWindow::when_wave_changed(int id, int value) {
 }
 void MainWindow::when_duty_changed(int id, int value) {
     tab0_text_browser->append(QString::number(id));
-}
-
-void MainWindow::update_filter_plot() {
-
-  bq_coefficients_t bq_coefficients;
-  QVector<double>   _m;
-  bq_coefficients = _bq->bq_coefficients(bq_type_t(_cmb_f_type->currentIndex()), _dia_f->value(), 44100.0, _dia_q->value()/100.0);
-  _bq->bq_normalize(bq_coefficients);
-  _m = _bq->bq_magnitude_response(bq_coefficients, 44100.0, samples);
-
-  for (int i = 0; i < samples; i++) {
-    _m[i] = 10*log10(_m[i]/1.0);
-  }
-  plot->set_plot(&_m);
-}
-
-
-void MainWindow::when_filter_changed() {
-  update_filter_plot();
-  _tab1_qle_f->setText(QString::number(_dia_f->value()));
-  _tab1_qle_q->setText(QString::number(_dia_q->value()/100)+"."+QString::number(_dia_q->value()%100));
 }
