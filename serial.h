@@ -78,66 +78,65 @@ const unsigned short crc_16_table[256] = {
 };
 
 
-class Serial : public QObject
-{
+class Serial : public QObject {
+
   Q_OBJECT
 
-private:
+  private:
 
-  static const unsigned int RX_BUFFER_SIZE_C = 4096;
-  static const unsigned int RX_TIMEOUT_C     = 50;
+    static const unsigned int RX_BUFFER_SIZE_C = 4096;
+    static const unsigned int RX_TIMEOUT_C     = 50;
 
-public:
+  public:
 
-  explicit Serial(QObject *parent = nullptr);
-  QList<QSerialPortInfo> list_serial_devices();
-  bool port_connect(QString port_name);
-  void port_disconnect();
-  bool port_is_open();
-  QString port_name();
-  void port_write(QByteArray &data);
-  void port_error(QSerialPort::SerialPortError error);
-  void rx_parser(QByteArray &data);
-  void rx_set_crc_enabled(bool setting);
-  void rx_set_parse_as_string(bool setting);
-  bool rx_get_parse_as_string();
+    explicit Serial(QObject *parent = nullptr);
+    QList<QSerialPortInfo> list_serial_devices();
+    bool port_connect(QString port_name);
+    void port_disconnect();
+    bool port_is_open();
+    QString port_name();
+    void port_write(QByteArray &data);
+    void port_error(QSerialPort::SerialPortError error);
+    void rx_parser(QByteArray &data);
+    void rx_set_crc_enabled(bool setting);
+    void rx_set_parse_as_string(bool setting);
+    bool rx_get_parse_as_string();
 
-private:
+  private:
 
-  unsigned short crc_16(const unsigned char *buf, unsigned int len);
-  bool cmd_write(QByteArray &data);
-  bool cmd_read(QByteArray &data);
+    unsigned short crc_16(const unsigned char *buf, unsigned int len);
+    bool cmd_write(QByteArray &data);
+    bool cmd_read(QByteArray &data);
 
-private:
+  private:
 
-  QSerialPort *serial_port;
-  QTimer      *rx_timer;
+    QSerialPort *serial_port;
+    QTimer      *rx_timer;
 
-  // Receieve state machine
-  rx_state_t    rx_state;
-  unsigned char rx_buffer[RX_BUFFER_SIZE_C];
-  QByteArray    rx_string;
-  unsigned int  rx_length;
-  unsigned int  rx_addr;
-  int           rx_timeout;
-  unsigned char rx_crc_low;
-  unsigned char rx_crc_high;
-  bool          rx_crc_enabled;
-  bool          rx_parse_as_string;
+    // Receieve state machine
+    rx_state_t    rx_state;
+    unsigned char rx_buffer[RX_BUFFER_SIZE_C];
+    QByteArray    rx_string;
+    unsigned int  rx_length;
+    unsigned int  rx_addr;
+    int           rx_timeout;
+    unsigned char rx_crc_low;
+    unsigned char rx_crc_high;
+    bool          rx_crc_enabled;
+    bool          rx_parse_as_string;
 
-  QRegularExpressionMatch match;
-  bool hasMatch;
-  QRegularExpression re_axi_wr;
-  QRegularExpression re_axi_rd;
+    QRegularExpressionMatch match;
+    bool hasMatch;
+    QRegularExpression re_axi_wr;
+    QRegularExpression re_axi_rd;
 
-signals:
-  void read_received(QByteArray data);
-  void error_message(QString msg);
+  signals:
+    void read_received(QByteArray data);
+    void error_message(QString msg);
 
-public slots:
-  void port_read();
-  void rx_timer_timeout_slot();
-
+  public slots:
+    void port_read();
+    void rx_timer_timeout_slot();
 };
 
 #endif

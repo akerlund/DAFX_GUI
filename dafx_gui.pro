@@ -19,7 +19,8 @@ SOURCES += \
     mixchannel.cpp \
     main.cpp \
     mixer.cpp \
-    filter.cpp
+    filter.cpp \
+    console.cpp
 
 HEADERS += \
     biquad.h \
@@ -32,7 +33,8 @@ HEADERS += \
     mixchannel.h \
     mainwindow.h \
     mixer.h \
-    filter.h
+    filter.h \
+    console.h
 
 FORMS += \
     mainwindow.ui

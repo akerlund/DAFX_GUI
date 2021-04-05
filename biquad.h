@@ -42,12 +42,11 @@ typedef enum {
 
 class Biquad {
 
-public:
-  Biquad();
-  bq_coefficients_t bq_coefficients(bq_type_t bq_type, double f0, double fs, double q);
-  void bq_normalize(bq_coefficients_t &bqc);
-  QVector<double> bq_magnitude_response(bq_coefficients_t bqc, double fs, int n);
-
+  public:
+    Biquad();
+    bq_coefficients_t bq_coefficients(bq_type_t bq_type, double f0, double fs, double q);
+    void bq_normalize(bq_coefficients_t &bqc);
+    QVector<double> bq_magnitude_response(bq_coefficients_t bqc, double fs, int n);
 };
 
 #endif

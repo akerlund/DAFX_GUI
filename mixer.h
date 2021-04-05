@@ -28,6 +28,7 @@
 #include <QFrame>
 
 class Mixer : public QObject {
+
   Q_OBJECT
 
   const int MIXER_CHANNELS_C = 5;

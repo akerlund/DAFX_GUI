@@ -31,26 +31,23 @@
 #include <QMap>
 #include <QRegularExpression>
 
-class CmdLine : public QWidget
-{
+class CmdLine : public QWidget {
+
   Q_OBJECT
 
-public:
-  explicit CmdLine(QWidget *parent = nullptr);
-  bool cmd_parser(QString cmd);
-  void load_cmd_file();
-  bool eventFilter(QObject *object, QEvent *e);
+  public:
+    explicit CmdLine(QWidget *parent = nullptr);
+    bool cmd_parser(QString cmd);
+    void load_cmd_file();
+    bool eventFilter(QObject *object, QEvent *e);
 
-private:
+  private:
+    QMap<QString, int> commands;
+    QComboBox    *cmd_line;
+    QHBoxLayout  *cmd_layout;
 
-  QMap<QString, int> commands;
-
-  QComboBox    *cmd_line;
-  QHBoxLayout  *cmd_layout;
-
-signals:
-  void return_pressed(QString line);
-
+  signals:
+    void return_pressed(QString line);
 };
 
 #endif
