@@ -22,7 +22,49 @@
 
 #include "mixer.h"
 
-Mixer::Mixer(QObject *parent) : QObject(parent)
-{
+Mixer::Mixer(QObject *parent) : QObject(parent) {
+
+  _body_layout = new QHBoxLayout;
+
+  for (int i = 0; i < MIXER_CHANNELS_C; i++) {
+    _qframe = new QFrame();
+    _qframe->setFrameShadow(QFrame::Sunken);
+    _qframe->setFrameShape(QFrame::VLine);
+    _mix_channel = new MixChannel(i);
+    _body_layout->addLayout(_mix_channel->main_layout);
+    _body_layout->addWidget(_qframe);
+    connect(_mix_channel, &MixChannel::pan_value_changed,  this, &Mixer::when_pan_changed);
+    connect(_mix_channel, &MixChannel::gain_value_changed, this, &Mixer::when_gain_changed);
+    connect(_mix_channel, &MixChannel::freq_value_changed, this, &Mixer::when_freq_changed);
+    connect(_mix_channel, &MixChannel::wave_value_changed, this, &Mixer::when_wave_changed);
+    connect(_mix_channel, &MixChannel::duty_value_changed, this, &Mixer::when_duty_changed);
+  }
+  _body_layout->addStretch();
+  main_layout = new QVBoxLayout;
+  main_layout->addLayout(_body_layout);
+}
+
+
+void Mixer::when_pan_changed(int id, int value) {
+
+}
+
+
+void Mixer::when_gain_changed(int id, int value) {
+
+}
+
+
+void Mixer::when_freq_changed(int id, int value) {
+
+}
+
+
+void Mixer::when_wave_changed(int id, int value) {
+
+}
+
+
+void Mixer::when_duty_changed(int id, int value) {
 
 }

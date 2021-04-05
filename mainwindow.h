@@ -30,6 +30,7 @@
 #include "mixchannel.h"
 #include "biquad.h"
 #include "filter.h"
+#include "mixer.h"
 #include <QApplication>
 #include <QMainWindow>
 #include <QPushButton>
@@ -83,13 +84,13 @@ class MainWindow : public QMainWindow
   QPushButton  *tab0_btn_clear;
 
   Filter       *_filter;
+  Mixer        *_mixer;
 
   QWidget      *tab1;
   QWidget      *tab2;
   QHBoxLayout  *tab2_layout;
   MixChannel   *_mix_channel;
-  QList<MixChannel*> _mix_lst;
-  QFrame *_qframe;
+  QFrame       *_qframe;
 
 
 public:
@@ -110,11 +111,6 @@ private slots:
   void when_tab0_chk_crc_enabled_state(int state);
   void when_cmd_return_pressed(QString line);
 
-  void when_pan_changed(int id, int value);
-  void when_gain_changed(int id, int value);
-  void when_freq_changed(int id, int value);
-  void when_wave_changed(int id, int value);
-  void when_duty_changed(int id, int value);
 };
 
 #endif

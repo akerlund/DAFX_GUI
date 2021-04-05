@@ -81,15 +81,18 @@ Filter::Filter(QObject *parent) : QObject(parent) {
   update_filter_plot();
 }
 
+
 void Filter::set_nr_of_samples(int value) {
   _samples = value;
   _plot->set_nr_of_x_values(value);
 }
 
+
 void Filter::set_fs(double value) {
   _fs = value;
   _plot->set_max_x(value);
 }
+
 
 void Filter::when_filter_changed() {
   update_filter_plot();

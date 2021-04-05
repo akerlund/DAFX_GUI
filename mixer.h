@@ -23,17 +23,34 @@
 #ifndef MIXER_H
 #define MIXER_H
 
+#include "mixchannel.h"
 #include <QObject>
+#include <QFrame>
 
-class Mixer : public QObject
-{
+class Mixer : public QObject {
   Q_OBJECT
-public:
-  explicit Mixer(QObject *parent = nullptr);
 
-signals:
+  const int MIXER_CHANNELS_C = 5;
 
-public slots:
+  public:
+    explicit Mixer(QObject *parent = nullptr);
+
+  public:
+    QVBoxLayout *main_layout;
+
+  private:
+    QHBoxLayout *_body_layout;
+    MixChannel  *_mix_channel;
+    QFrame      *_qframe;
+
+  signals:
+
+  private slots:
+    void when_pan_changed(int id, int value);
+    void when_gain_changed(int id, int value);
+    void when_freq_changed(int id, int value);
+    void when_wave_changed(int id, int value);
+    void when_duty_changed(int id, int value);
 };
 
-#endif // MIXER_H
+#endif

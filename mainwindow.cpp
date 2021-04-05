@@ -93,35 +93,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
 
   // Tab 1
-  //samples = 500;
   _filter = new Filter();
-  tab1 = new QWidget();
+  tab1    = new QWidget();
   tab1->setLayout(_filter->main_layout);
 
-
   // Tab 2
-  tab2        = new QWidget();
-  tab2_layout = new QHBoxLayout;
-
-  for (int i = 0; i < MIXER_CHANNELS_C; i++) {
-    _qframe = new QFrame();
-    _qframe->setFrameShadow(QFrame::Sunken);
-    _qframe->setFrameShape(QFrame::VLine);
-    _mix_channel = new MixChannel(i);
-    tab2_layout->addLayout(_mix_channel->main_layout);
-    tab2_layout->addWidget(_qframe);
-    connect(_mix_channel, &MixChannel::pan_value_changed,  this, &MainWindow::when_pan_changed);
-    connect(_mix_channel, &MixChannel::gain_value_changed, this, &MainWindow::when_gain_changed);
-    connect(_mix_channel, &MixChannel::freq_value_changed, this, &MainWindow::when_freq_changed);
-    connect(_mix_channel, &MixChannel::wave_value_changed, this, &MainWindow::when_wave_changed);
-    connect(_mix_channel, &MixChannel::duty_value_changed, this, &MainWindow::when_duty_changed);
-  }
-
-  tab2_layout->addStretch();
-  tab2->setLayout(tab2_layout);
+  _mixer = new Mixer();
+  tab2   = new QWidget();
+  tab2->setLayout(_mixer->main_layout);
 
   main_tab->addTab(tab0, "Console");
-  main_tab->addTab(tab1, "Other");
+  main_tab->addTab(tab1, "Filter");
   main_tab->addTab(tab2, "Mixer");
   main_tab->setTabPosition(QTabWidget::North);
   main_tab->setCurrentIndex(1);
@@ -245,20 +227,4 @@ void MainWindow::when_read_received(QByteArray data) {
 
 void MainWindow::when_port_error(QString error) {
   tab0_text_browser->append(error);
-}
-
-void MainWindow::when_pan_changed(int id, int value) {
-  tab0_text_browser->append(QString::number(id));
-}
-void MainWindow::when_gain_changed(int id, int value) {
-    tab0_text_browser->append(QString::number(id));
-}
-void MainWindow::when_freq_changed(int id, int value) {
-    tab0_text_browser->append(QString::number(id));
-}
-void MainWindow::when_wave_changed(int id, int value) {
-    tab0_text_browser->append(QString::number(id));
-}
-void MainWindow::when_duty_changed(int id, int value) {
-    tab0_text_browser->append(QString::number(id));
 }
