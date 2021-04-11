@@ -26,12 +26,14 @@
 #include "mixchannel.h"
 #include <QObject>
 #include <QFrame>
+#include <QTimer>
 
 class Mixer : public QObject {
 
   Q_OBJECT
 
   const int MIXER_CHANNELS_C = 5;
+  const int Q_BITS_C         = 11;
 
   public:
     explicit Mixer(QObject *parent = nullptr);
@@ -43,8 +45,11 @@ class Mixer : public QObject {
     QHBoxLayout *_body_layout;
     MixChannel  *_mix_channel;
     QFrame      *_qframe;
+    QTimer      *_qtimer;
+    QString     _emit_str;
 
   signals:
+    void serial_message(QByteArray msg);
 
   private slots:
     void when_pan_changed(int id, int value);
@@ -52,6 +57,7 @@ class Mixer : public QObject {
     void when_freq_changed(int id, int value);
     void when_wave_changed(int id, int value);
     void when_duty_changed(int id, int value);
+    void timer_timeout_slot();
 };
 
 #endif

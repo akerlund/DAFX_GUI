@@ -41,9 +41,9 @@ class Console : public QObject {
     explicit Console(QObject *parent = nullptr);
     QVBoxLayout  *main_layout;
     QLabel       *serial_label;
+    Serial       *_serial;
 
   private:
-    Serial       *_serial;
     CmdLine      *_cmd_line;
     QHBoxLayout  *_header_layout;
     QComboBox    *_serial_list;
@@ -60,6 +60,9 @@ class Console : public QObject {
     QPushButton  *_btn_clear;
 
   signals:
+
+  public slots:
+    void when_serial_message(QByteArray);
 
   private slots:
     void when_read_received(QByteArray);

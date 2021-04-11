@@ -22,8 +22,8 @@
 
 #include "mixchannel.h"
 
-MixChannel::MixChannel(int mix_id, QObject *parent) : QObject(parent)
-{
+MixChannel::MixChannel(int mix_id, QObject *parent) : QObject(parent) {
+
   _id = mix_id;
   main_layout  = new QHBoxLayout();
   _head_layout = new QVBoxLayout();
@@ -60,26 +60,30 @@ MixChannel::MixChannel(int mix_id, QObject *parent) : QObject(parent)
   _sli_gain->setMaximumWidth(25);
   _sli_gain->setMinimum(0);
   _sli_gain->setMaximum(200);
-  _sli_gain->setSliderPosition(100);
+  _sli_gain->setValue(100);
   _sli_freq->setOrientation(Qt::Vertical);
   _sli_freq->setMaximumHeight(300);
   _sli_freq->setMaximumWidth(25);
   _sli_freq->setMinimum(20);
   _sli_freq->setMaximum(2000);
-  _sli_freq->setSliderPosition(444);
+  _sli_freq->setValue(444);
+  _sli_duty->setMaximumWidth(50);
+  _sli_duty->setOrientation(Qt::Horizontal);
+  _sli_duty->setMinimum(10);
+  _sli_duty->setMaximum(990);
+  _sli_duty->setValue(500);
   _qle_pan->setMaximumWidth(50);
   _qle_gain->setMaximumWidth(50);
+  _qle_gain->setText(QString::number(_sli_gain->value()/100)+"."+QString::number(_sli_gain->value()%100));
   _qle_freq->setMaximumWidth(50);
+  _qle_freq->setText(QString::number(_sli_freq->value()));
   _qle_duty->setMaximumWidth(50);
+  _qle_duty->setText(QString::number(_sli_duty->value()/10));
   _cmb_wave->insertItem(0, "SQR");
   _cmb_wave->insertItem(1, "TRI");
   _cmb_wave->insertItem(2, "SAW");
   _cmb_wave->insertItem(3, "SIN");
   _cmb_wave->setMaximumWidth(50);
-  _sli_duty->setMaximumWidth(50);
-  _sli_duty->setOrientation(Qt::Horizontal);
-  _sli_duty->setMinimum(1);
-  _sli_duty->setSliderPosition(50);
 
   _body_layout->addWidget(_lbl_gain, 0, 0);
   _body_layout->addWidget(_lbl_freq, 0, 1);
@@ -115,9 +119,6 @@ MixChannel::MixChannel(int mix_id, QObject *parent) : QObject(parent)
 
   connect(_sli_duty, &QSlider::valueChanged,      this, &MixChannel::when_duty0_changed);
   connect(_qle_duty, &QLineEdit::editingFinished, this, &MixChannel::when_duty1_changed);
-
-
-  _sli_gain->setValue(_id);
 }
 
 void MixChannel::when_pan0_changed(int value) {
@@ -131,7 +132,7 @@ void MixChannel::when_pan1_changed() {
 }
 
 void MixChannel::when_gain0_changed(int value) {
-  _qle_gain->setText(QString::number(value));
+  _qle_gain->setText(QString::number(value/100)+"."+QString::number(value%100));
   emit gain_value_changed(_id, value);
 }
 
@@ -155,11 +156,11 @@ void MixChannel::when_wave_changed(int value) {
 }
 
 void MixChannel::when_duty0_changed(int value) {
-  _qle_duty->setText(QString::number(value));
+  _qle_duty->setText(QString::number(value/10));
   emit duty_value_changed(_id, value);
 }
 
 void MixChannel::when_duty1_changed() {
-  _sli_duty->setValue(_qle_duty->text().toInt());
+  _sli_duty->setValue(_qle_duty->text().toInt()/10);
   emit duty_value_changed(_id, _qle_duty->text().toInt());
 }

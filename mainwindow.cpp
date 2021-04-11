@@ -55,8 +55,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
   _main_tab->addTab(_tab0, "Console");
   _main_tab->addTab(_tab1, "Filter");
   _main_tab->addTab(_tab2, "Mixer");
-  _main_tab->setCurrentIndex(1);
+  _main_tab->setCurrentIndex(0);
   _main_tab->setTabPosition(QTabWidget::North);
+
+  connect(_mixer, &Mixer::serial_message, _console, &Console::when_serial_message);
 }
 
 MainWindow::~MainWindow() {

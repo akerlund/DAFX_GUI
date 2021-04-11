@@ -184,9 +184,17 @@ void Console::when_read_received(QByteArray data) {
     byte_array.vbAppendUint8(data[2]);
     byte_array.vbAppendUint8(data[3]);
   }
-
 }
 
 void Console::when_port_error(QString error) {
   _text_browser->append(error);
+}
+
+void Console::when_serial_message(QByteArray data) {
+  _text_browser->append(QString::fromStdString(data.toStdString()).trimmed());
+  if (_serial->port_is_open()) {
+    _serial->port_write(data);
+  } else {
+    _text_browser->append("ERROR [serial] Port is not open");
+  }
 }

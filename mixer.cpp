@@ -21,6 +21,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "mixer.h"
+#include "base_addresses.h"
+#include "dafx_address.h"
 
 Mixer::Mixer(QObject *parent) : QObject(parent) {
 
@@ -42,6 +44,10 @@ Mixer::Mixer(QObject *parent) : QObject(parent) {
   _body_layout->addStretch();
   main_layout = new QVBoxLayout;
   main_layout->addLayout(_body_layout);
+
+  _qtimer = new QTimer(this);
+  _qtimer->setInterval(100);
+  connect(_qtimer, &QTimer::timeout, this, &Mixer::timer_timeout_slot);
 }
 
 
@@ -51,20 +57,30 @@ void Mixer::when_pan_changed(int id, int value) {
 
 
 void Mixer::when_gain_changed(int id, int value) {
-
+  _emit_str = "wr " + QString::number(MIXER_CHANNEL_GAIN_0_ADDR) + " " + QString::number((value<<Q_BITS_C)/100);
+  _qtimer->start();
 }
 
 
 void Mixer::when_freq_changed(int id, int value) {
-
+  _emit_str = "wr " + QString::number(OSC0_FREQUENCY_ADDR) + " " + QString::number(value<<Q_BITS_C);
+  _qtimer->start();
 }
 
 
 void Mixer::when_wave_changed(int id, int value) {
-
+  _emit_str = "wr " + QString::number(OSC0_WAVEFORM_SELECT_ADDR) + " " + QString::number(value);
+  _qtimer->start();
 }
 
 
 void Mixer::when_duty_changed(int id, int value) {
+  _emit_str = "wr " + QString::number(OSC0_DUTY_CYCLE_ADDR) + " " + QString::number(value);
+  _qtimer->start();
+}
 
+
+void Mixer::timer_timeout_slot() {
+  emit serial_message(_emit_str.toUtf8());
+  _qtimer->stop();
 }
